@@ -5,24 +5,47 @@ from statsmodels.tsa.holtwinters import ExponentialSmoothing
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from matplotlib.ticker import FuncFormatter, MaxNLocator
 
+from config import *
+
 def prepare_data():
-    """Подготовка и загрузка данных"""
-    historical_data = np.array([
-        21894, 32310, 173759, 131524, 121917, 98039, 146247, 151564,
-        111169, 109041, 86699, 71410, 124160, 128950, 131759, 111093,
-        176348, 149677, 178979, 162920, 162662, 270580, 339502, 331568
-    ])
+    """Подготовка данных с автоматическим определением последнего года"""
+    # Проверка что historical_data содержит целое число лет (кратно 12)
+    if len(historical_data) % 12 != 0:
+        raise ValueError("historical_data должен содержать данные ровно за целые годы (кратно 12)")
 
-    actual_2024 = {
-        'Январь': 204276, 'Февраль': 120337, 'Март': 172254, 'Апрель': 157239,
-        'Май': 256708, 'Июнь': 298654, 'Июль': 310759,'Август': 150086,
-        'Сентябрь': 150904, 'Октябрь': 219280, 'Ноябрь': 197700, 'Декабрь': 226484
-    }
+    # Преобразуем в numpy array
+    historical_array = np.array(historical_data)
+    actual_array = np.array(actual_data)
 
-    dates = pd.date_range(start='2022-01', periods=len(historical_data), freq='ME')
-    ts = pd.Series(historical_data, index=dates)
-    actual_dates = pd.date_range(start='2024-01', periods=len(actual_2024), freq='ME')
-    actual_series = pd.Series(actual_2024.values(), index=actual_dates)
+    # 1. Создаём основной временной ряд (historical)
+    historical_dates = pd.date_range(
+        start=year,
+        periods=len(historical_array),
+        freq='MS'
+    )
+    ts = pd.Series(historical_array, index=historical_dates)
+
+    # 2. Определяем последний год для сравнения (actual)
+    num_years = len(historical_data) // 12
+    last_year_start = pd.to_datetime(year) + pd.DateOffset(years=num_years - 1)
+
+
+    global f1, f2, f3
+    f1 = year[:4] #Год относительно которого отсчёт
+    f2 = str(last_year_start.year) #Финальный для исторических данных год
+    f3 = str(int(f2)+1) # Финальный фактический год
+
+    # Проверяем что actual_data содержит ровно 12 значений
+    if len(actual_array) != 12:
+        raise ValueError("actual_data должен содержать ровно 12 значений (данные за 1 год)")
+
+    # Создаём даты для actual (последний год historical + 1 год)
+    actual_dates = pd.date_range(
+        start=last_year_start + pd.DateOffset(years=1),
+        periods=12,
+        freq='MS'
+    )
+    actual_series = pd.Series(actual_array, index=actual_dates)
 
     return ts, actual_series
 
@@ -59,11 +82,11 @@ def plot_results(historical, forecast_add, forecast_mul, actual):
     ax.yaxis.set_major_locator(MaxNLocator(integer=True))
 
     # Построение графиков
-    plt.plot(historical.index, historical, 'b-', label='Исторические данные (2022-2023)', marker='o', linewidth=2)
+    plt.plot(historical.index, historical, 'b-', label=f"Исторические данные ({f1}-{f2})", marker='o', linewidth=2)
     plt.plot(forecast_add.index, forecast_add, 'g--', label='Прогноз (аддитивная модель)', marker='s', linewidth=2)
     plt.plot(forecast_mul.index, forecast_mul, 'r--', label='Прогноз (мультипликативная модель)', marker='^',
              linewidth=2)
-    plt.plot(actual.index, actual, 'k-', label='Фактические данные 2024', marker='D', linewidth=2, markersize=8)
+    plt.plot(actual.index, actual, 'k-', label=f"Фактические данные {f3}", marker='D', linewidth=2, markersize=8)
 
     # # Добавление подписей
     # for date, value in zip(actual.index, actual.values):
@@ -72,7 +95,7 @@ def plot_results(historical, forecast_add, forecast_mul, actual):
     #              bbox=dict(facecolor='white', alpha=0.8, edgecolor='none'))
 
     # Настройка отображения
-    plt.title('Прогноз и фактические значения количества атак (2022-2024)', fontsize=16, pad=20)
+    plt.title(f'Прогноз и фактические значения количества атак ({f1}-{f3})', fontsize=16, pad=20)
     plt.xlabel('Месяц', fontsize=14)
     plt.ylabel('Количество атак', fontsize=14)
     plt.legend(fontsize=12, loc='upper left')
@@ -113,7 +136,7 @@ def print_results(forecast_add, forecast_mul, actual, month_names):
 def main():
     """Основной поток выполнения"""
     # Подготовка данных
-    ts, actual_2024 = prepare_data()
+    ts, actual_data = prepare_data()
     month_names = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"]
 
     # Построение моделей
@@ -125,8 +148,8 @@ def main():
     forecast_mul = np.round(model_mul.forecast(12)).astype(int)
 
     # Визуализация и вывод результатов
-    plot_results(ts, forecast_add, forecast_mul, actual_2024)
-    print_results(forecast_add, forecast_mul, actual_2024, month_names)
+    plot_results(ts, forecast_add, forecast_mul, actual_data)
+    print_results(forecast_add, forecast_mul, actual_data, month_names)
 
 
 if __name__ == "__main__":
