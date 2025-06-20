@@ -27,5 +27,3 @@ actual_data = [
 #     600, 590, 630, 620, 660,
 #     300, 650, 640, 630, 680, 650, 600
 # ]
-
-num_years = len(historical_data) // 12
