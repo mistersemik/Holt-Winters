@@ -63,3 +63,60 @@ def HW_ARMIMA(ts, hw_model):
     )
 
     return pd.Series(hw_forecast.values + arima_forecast, index=forecast_dates) # Комбинируем прогнозы
+
+
+def HW_LSTM(ts, hw_model, n_steps=3, n_epochs=50, n_neurons=50):
+    """
+    Комбинированная модель Хольта-Винтерса + LSTM.
+
+    Параметры:
+    - ts: исходный временной ряд (pandas.Series)
+    - hw_model: обученная модель Хольта-Винтерса
+    - n_steps: количество временных шагов для LSTM (по умолчанию 3)
+    - n_epochs: количество эпох обучения LSTM (по умолчанию 50)
+    - n_neurons: количество нейронов в LSTM слое (по умолчанию 50)
+
+    Возвращает:
+    - Прогноз на 12 периодов (pandas.Series)
+    """
+    hw_forecast = hw_model.forecast(12)
+    residuals = ts - hw_model.fittedvalues
+    residuals = residuals.dropna().values.reshape(-1, 1)
+
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    residuals_scaled = scaler.fit_transform(residuals)
+
+    def create_dataset(data, n_steps):
+        X, y = [], []
+        for i in range(len(data) - n_steps):
+            X.append(data[i:i + n_steps, 0])
+            y.append(data[i + n_steps, 0])
+        return np.array(X), np.array(y)
+
+    X, y = create_dataset(residuals_scaled, n_steps)
+    X = X.reshape(X.shape[0], X.shape[1], 1)
+
+    model = Sequential([
+        LSTM(n_neurons, activation='relu'),
+        Dense(1)
+    ])
+    model.compile(optimizer='adam', loss='mse')
+    model.fit(X, y, epochs=n_epochs, verbose=0)
+
+    last_residuals = residuals_scaled[-n_steps:].reshape(1, n_steps, 1)
+    lstm_forecast_scaled = []
+    for _ in range(12):
+        pred = model.predict(last_residuals, verbose=0)
+        lstm_forecast_scaled.append(pred[0, 0])
+        last_residuals = np.append(last_residuals[:, 1:, :], pred.reshape(1, 1, 1), axis=1)
+
+    # Исправление формы данных для inverse_transform
+    lstm_forecast = scaler.inverse_transform(np.array(lstm_forecast_scaled).reshape(-1, 1)).flatten()
+
+    forecast_dates = pd.date_range(
+        start=ts.index[-1] + pd.DateOffset(months=1),
+        periods=12,
+        freq='MS'
+    )
+
+    return pd.Series(hw_forecast.values + lstm_forecast, index=forecast_dates)
