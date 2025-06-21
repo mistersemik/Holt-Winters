@@ -4,7 +4,7 @@ import pandas as pd
 from config import historical_data, actual_data, year
 from core.preprocessing import prepare_data
 from utils.visualization import plot_results
-from core.models import build_model, HW_ARMIMA
+from core.models import build_model, HW_ARMIMA, HW_LSTM
 from core.calculations import calculate_metrics
 
 import warnings
@@ -61,14 +61,25 @@ def main():
     forecast_add = np.round(model_add.forecast(12)).astype(int)
     forecast_mul = np.round(model_mul.forecast(12)).astype(int)
 
+    print('\nРезультат прогнозирования Хольта-Винтерса')
     plot_results(ts, forecast_add, forecast_mul, actual_series, model_type='HW', f1=f1, f2=f2, f3=f3)
     print_results(forecast_add, forecast_mul, actual_series, month_names)
 
+    print('\nРезультат прогнозирования Хольта-Винтерса & ARIMA')
     arima_forecast_add = HW_ARMIMA(ts, model_add)
     arima_forecast_mul = HW_ARMIMA(ts, model_mul)
 
     plot_results(ts, arima_forecast_add, arima_forecast_mul, actual_series, model_type='HW_ARIMA', f1=f1, f2=f2, f3=f3)
     print_results(arima_forecast_add, arima_forecast_mul, actual_series, month_names)
+
+    # Добавлен вызов HW_LSTMM
+    print('\nРезультат прогнозирования Хольта-Винтерса & LSTM')
+    lstm_forecast_add = HW_LSTM(ts, model_add)
+    lstm_forecast_mul = HW_LSTM(ts, model_mul)
+
+    plot_results(ts, lstm_forecast_add, lstm_forecast_mul, actual_series, model_type='HW_LSTM', f1=f1, f2=f2, f3=f3)
+    print_results(lstm_forecast_add, lstm_forecast_mul, actual_series, month_names)
+
 
 if __name__ == "__main__":
     main()
