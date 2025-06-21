@@ -21,8 +21,12 @@ def plot_results(historical, forecast_add, forecast_mul, actual, model_type='HW'
     # Основные подписи
     labels = {
         'historical': f"Исторические данные ({f1}-{f2})",
-        'add': 'Прогноз (аддитивная модель)' if model_type == 'HW' else 'Прогноз (аддитивная HW+ARIMA)',
-        'mul': 'Прогноз (мультипликативная модель)' if model_type == 'HW' else 'Прогноз (мультипликативная HW+ARIMA)',
+        'add': 'Прогноз (аддитивная модель)' if model_type == 'HW'
+        else 'Прогноз (аддитивная HW+ARIMA)' if model_type == 'HW_ARIMA'
+        else 'Прогноз (аддитивная HW+LSTM)',
+        'mul': 'Прогноз (мультипликативная модель)' if model_type == 'HW'
+        else 'Прогноз (мультипликативная HW+ARIMA)' if model_type == 'HW_ARIMA'
+        else 'Прогноз (мультипликативная HW+LSTM)',
         'actual': f"Фактические данные {f3}"
     }
 
