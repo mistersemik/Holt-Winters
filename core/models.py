@@ -4,7 +4,17 @@ from pmdarima import auto_arima
 
 
 def build_model(data, seasonal_type='add', seasonal_periods=12):
-    """Построение модели Хольта-Винтерса"""
+    """
+    Строит и обучает модель Хольта-Винтерса для временных рядов.
+
+    Параметры:
+    - data: pandas.Series - временной ряд для обучения
+    - seasonal_type: str - тип сезонности ('add' - аддитивная, 'mul' - мультипликативная)
+    - seasonal_periods: int - количество периодов в сезонном цикле (по умолчанию 12 для месячных данных)
+
+    Возвращает:
+    - Обученную модель ExponentialSmoothing
+    """
     model = ExponentialSmoothing(
         data,
         trend='add',
