@@ -48,13 +48,7 @@ __Действующая структура проекта:__
 прогноз окажется успешным.
 
 ## Хольт-Винтерс & ARIMA
-__При отсутствии совместимости библиотек:__
-```
-pip uninstall numpy pmdarima -y
-pip install numpy==1.23.5 pmdarima==2.0.3
 
-# matplotlib - v 3.9.1
-```
 ![alt text](images/pict_hw_arima_model.png)
 ![alt text](images/pict_hw_arima.png)
 
