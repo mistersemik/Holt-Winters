@@ -1,6 +1,10 @@
+import numpy as np
 import pandas as pd
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 from pmdarima import auto_arima
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
+from sklearn.preprocessing import MinMaxScaler
 
 
 def build_model(data, seasonal_type='add', seasonal_periods=12):
@@ -24,7 +28,6 @@ def build_model(data, seasonal_type='add', seasonal_periods=12):
         damped_trend=False
     ).fit()
     return model
-
 
 def HW_ARMIMA(ts, hw_model):
     """
