@@ -187,3 +187,24 @@ def hw_bayesian_ensemble(ts):
         trace = pm.sample(1000)
         forecast = pm.sample_posterior_predictive(trace, var_names=['trend'])
     return forecast['trend'].mean(axis=0)[-12:]
+
+
+from tslearn.clustering import TimeSeriesKMeans
+
+
+def clustered_hw(ts, n_clusters=3):
+    # Преобразуем в 3D-массив (примеры, время, 1 признак)
+    X = ts.values.reshape(-1, 12, 1)  # Группируем по годам
+
+    # Кластеризация
+    km = TimeSeriesKMeans(n_clusters=n_clusters)
+    clusters = km.fit_predict(X)
+
+    # Прогноз для каждого кластера
+    forecasts = []
+    for c in range(n_clusters):
+        cluster_ts = pd.Series(X[clusters == c].mean(axis=0).flatten())
+        hw = ExponentialSmoothing(cluster_ts, seasonal='add').fit()
+        forecasts.append(hw.forecast(12))
+
+    return np.mean(forecasts, axis=0)
