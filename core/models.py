@@ -158,3 +158,13 @@ def hw_xgboost_ensemble(ts, exog_features):
     xgb_forecast = selector.predict(exog_features[-12:])
 
     return hw.forecast(12) + xgb_forecast
+
+from keras.layers import Input, Conv1D, Dense
+from keras.models import Model
+
+def build_tcn_residual_model(input_shape):
+    inputs = Input(shape=input_shape)
+    x = Conv1D(64, kernel_size=3, dilation_rate=1, padding='causal')(inputs)
+    x = Conv1D(64, kernel_size=3, dilation_rate=2, padding='causal')(x)
+    outputs = Dense(1)(x)
+    return Model(inputs, outputs)
