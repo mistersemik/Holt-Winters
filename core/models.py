@@ -141,3 +141,20 @@ def hw_prophet_ensemble(ts, holidays_df):
 
     return hw.forecast(12) + prophet_forecast.values
 
+
+from xgboost import XGBRegressor
+from sklearn.feature_selection import RFE
+
+
+def hw_xgboost_ensemble(ts, exog_features):
+    # HW компонента
+    hw = ExponentialSmoothing(ts).fit()
+    residuals = ts - hw.fittedvalues
+
+    # XGBoost на остатках
+    model = XGBRegressor()
+    selector = RFE(model, n_features_to_select=5)
+    selector.fit(exog_features[:-12], residuals.dropna())
+    xgb_forecast = selector.predict(exog_features[-12:])
+
+    return hw.forecast(12) + xgb_forecast
