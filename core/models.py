@@ -67,7 +67,6 @@ def HW_ARMIMA(ts, hw_model):
 
     return pd.Series(hw_forecast.values + arima_forecast, index=forecast_dates) # Комбинируем прогнозы
 
-
 def HW_LSTM(ts, hw_model, n_steps=3, n_epochs=50, n_neurons=50):
     """
     Комбинированная модель Хольта-Винтерса + LSTM.
@@ -126,92 +125,64 @@ def HW_LSTM(ts, hw_model, n_steps=3, n_epochs=50, n_neurons=50):
 
 from prophet import Prophet
 
-def hw_prophet_ensemble(ts, holidays_df):
-    # HW компонента
-    hw = ExponentialSmoothing(ts, seasonal='add').fit()
-    hw_residuals = ts - hw.fittedvalues
 
-    # Prophet на остатках
-    prophet_data = ts.reset_index()
+def hw_prophet_ensemble(ts, hw_model=None, holidays_df=None, seasonal_type='add'):
+    """
+    Комбинированная модель Хольта-Винтерса и Prophet с выбором типа сезонности
+
+    Параметры:
+        ts (pd.Series): Временной ряд с DatetimeIndex
+        hw_model (optional): Готовая модель ExponentialSmoothing (если None - будет создана новая)
+        holidays_df (pd.DataFrame, optional): Даты праздников в формате Prophet
+        seasonal_type (str): 'add' для аддитивной или 'mul' для мультипликативной сезонности
+
+    Возвращает:
+        pd.Series: Комбинированный прогноз на 12 периодов
+
+    Пример использования:
+    # Вариант 1: Классический вызов (создает модель внутри)
+    forecast = hw_prophet_ensemble(ts, holidays_df, seasonal_type='add')
+
+    # Вариант 2: С готовой моделью HW (оптимизированный)
+    hw_model = ExponentialSmoothing(ts, seasonal='add').fit()
+    forecast = hw_prophet_ensemble(ts, hw_model=hw_model, holidays_df)
+
+    # Вариант 3: Без праздников
+    forecast = hw_prophet_ensemble(ts, seasonal_type='mul')
+    """
+    # 1. Компонента Хольта-Винтерса (используем готовую модель или создаем новую)
+    if hw_model is None:
+        hw_model = ExponentialSmoothing(
+            ts,
+            trend='add',
+            seasonal=seasonal_type,
+            seasonal_periods=12
+        ).fit()
+
+    # 2. Определяем тип сезонности для Prophet
+    current_seasonal_type = hw_model.seasonal if hasattr(hw_model, 'seasonal') else seasonal_type
+
+    # 3. Настройка Prophet
+    prophet_model = Prophet(
+        holidays=holidays_df,
+        seasonality_mode='multiplicative' if current_seasonal_type == 'mul' else 'additive',
+        yearly_seasonality=True,
+        weekly_seasonality=False,
+        daily_seasonality=False
+    )
+
+    # 4. Подготовка данных для Prophet (работаем с остатками)
+    residuals = ts - hw_model.fittedvalues
+    prophet_data = residuals.reset_index()
     prophet_data.columns = ['ds', 'y']
-    model = Prophet(holidays=holidays_df)
-    model.fit(prophet_data)
-    future = model.make_future_dataframe(periods=12, freq='MS')
-    prophet_forecast = model.predict(future)['yhat'][-12:]
 
-    return hw.forecast(12) + prophet_forecast.values
+    # 5. Обучение и прогноз Prophet
+    prophet_model.fit(prophet_data.dropna())
+    future = prophet_model.make_future_dataframe(periods=12, freq='MS')
+    prophet_forecast = prophet_model.predict(future)['yhat'][-12:]
 
-
-from xgboost import XGBRegressor
-from sklearn.feature_selection import RFE
-
-
-def hw_xgboost_ensemble(ts, exog_features):
-    # HW компонента
-    hw = ExponentialSmoothing(ts).fit()
-    residuals = ts - hw.fittedvalues
-
-    # XGBoost на остатках
-    model = XGBRegressor()
-    selector = RFE(model, n_features_to_select=5)
-    selector.fit(exog_features[:-12], residuals.dropna())
-    xgb_forecast = selector.predict(exog_features[-12:])
-
-    return hw.forecast(12) + xgb_forecast
-
-from keras.layers import Input, Conv1D, Dense
-from keras.models import Model
-
-def build_tcn_residual_model(input_shape):
-    inputs = Input(shape=input_shape)
-    x = Conv1D(64, kernel_size=3, dilation_rate=1, padding='causal')(inputs)
-    x = Conv1D(64, kernel_size=3, dilation_rate=2, padding='causal')(x)
-    outputs = Dense(1)(x)
-    return Model(inputs, outputs)
-
-import pymc as pm
-
-def hw_bayesian_ensemble(ts):
-    with pm.Model():
-        # HW сезонность как фиксированный компонент
-        hw_seasonal = pm.Deterministic('hw_seasonal', hw_model.seasonal)
-
-        # Байесовский тренд
-        trend = pm.GaussianRandomWalk('trend', sigma=0.1, shape=len(ts))
-
-        # Комбинированная модель
-        y_obs = pm.Normal('y_obs',
-                          mu=hw_seasonal + trend,
-                          observed=ts)
-
-        trace = pm.sample(1000)
-        forecast = pm.sample_posterior_predictive(trace, var_names=['trend'])
-    return forecast['trend'].mean(axis=0)[-12:]
-
-
-from tslearn.clustering import TimeSeriesKMeans
-
-
-def clustered_hw(ts, n_clusters=3):
-    # Преобразуем в 3D-массив (примеры, время, 1 признак)
-    X = ts.values.reshape(-1, 12, 1)  # Группируем по годам
-
-    # Кластеризация
-    km = TimeSeriesKMeans(n_clusters=n_clusters)
-    clusters = km.fit_predict(X)
-
-    # Прогноз для каждого кластера
-    forecasts = []
-    for c in range(n_clusters):
-        cluster_ts = pd.Series(X[clusters == c].mean(axis=0).flatten())
-        hw = ExponentialSmoothing(cluster_ts, seasonal='add').fit()
-        forecasts.append(hw.forecast(12))
-
-    return np.mean(forecasts, axis=0)
-
-
-import pywt
-
+    # 6. Комбинация прогнозов
+    return hw_model.forecast(12) + prophet_forecast.values
 
 #
 # from xgboost import XGBRegressor
