@@ -64,12 +64,24 @@ def plot_results(historical, forecast_add, forecast_mul, actual, model_type='HW'
     # Основные подписи
     labels = {
         'historical': f"Исторические данные ({f1}-{f2})",
-        'add': 'Прогноз (аддитивная модель)' if model_type == 'HW'
-        else 'Прогноз (аддитивная HW+ARIMA)' if model_type == 'HW_ARIMA'
-        else 'Прогноз (аддитивная HW+LSTM)',
-        'mul': 'Прогноз (мультипликативная модель)' if model_type == 'HW'
-        else 'Прогноз (мультипликативная HW+ARIMA)' if model_type == 'HW_ARIMA'
-        else 'Прогноз (мультипликативная HW+LSTM)',
+        'add': {
+            'HW': 'Прогноз (аддитивная HW)',
+            'HW_ARIMA': 'Прогноз (аддитивная HW+ARIMA)',
+            'HW_LSTM': 'Прогноз (аддитивная HW+LSTM)',
+            'HW_Prophet': 'Прогноз (аддитивная HW+Prophet)',
+            'HW_XGBoost': 'Прогноз (аддитивная HW+XGBoost)',
+            'HW_Clustered': 'Прогноз (аддитивная HW+Clustering)'
+        }.get(model_type, f'Прогноз (аддитивная {model_type})'),
+
+        'mul': {
+            'HW': 'Прогноз (мультипликативная HW)',
+            'HW_ARIMA': 'Прогноз (мультипликативная HW+ARIMA)',
+            'HW_LSTM': 'Прогноз (мультипликативная HW+LSTM)',
+            'HW_Prophet': 'Прогноз (мультипликативная HW+Prophet)',
+            'HW_XGBoost': 'Прогноз (мультипликативная HW+XGBoost)',
+            'HW_Clustered': 'Прогноз (мультипликативная HW+Clustering)'
+        }.get(model_type, f'Прогноз (мультипликативная {model_type})'),
+
         'actual': f"Фактические данные {f3}"
     }
 
