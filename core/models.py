@@ -213,19 +213,91 @@ def clustered_hw(ts, n_clusters=3):
 import pywt
 
 
-def wavelet_hw(ts, wavelet='db4'):
-    # Декомпозиция
-    coeffs = pywt.wavedec(ts, wavelet, level=3)
-
-    # Прогноз для каждой компоненты
-    reconstructed = []
-    for i, coeff in enumerate(coeffs):
-        if i == 0:  # Аппроксимационная компонента
-            hw = ExponentialSmoothing(coeff, seasonal=None).fit()
-            recon = hw.forecast(len(coeff))
-        else:  # Детализирующие компоненты
-            recon = np.zeros_like(coeff)  # Шумовые компоненты не прогнозируем
-        reconstructed.append(recon)
-
-    # Реконструкция
-    return pywt.waverec(reconstructed, wavelet)[:12]
+#
+# from xgboost import XGBRegressor
+# from sklearn.feature_selection import RFE
+#
+#
+# def hw_xgboost_ensemble(ts, exog_features):
+#     # HW компонента
+#     hw = ExponentialSmoothing(ts).fit()
+#     residuals = ts - hw.fittedvalues
+#
+#     # XGBoost на остатках
+#     model = XGBRegressor()
+#     selector = RFE(model, n_features_to_select=5)
+#     selector.fit(exog_features[:-12], residuals.dropna())
+#     xgb_forecast = selector.predict(exog_features[-12:])
+#
+#     return hw.forecast(12) + xgb_forecast
+#
+# from keras.layers import Input, Conv1D, Dense
+# from keras.models import Model
+#
+# def build_tcn_residual_model(input_shape):
+#     inputs = Input(shape=input_shape)
+#     x = Conv1D(64, kernel_size=3, dilation_rate=1, padding='causal')(inputs)
+#     x = Conv1D(64, kernel_size=3, dilation_rate=2, padding='causal')(x)
+#     outputs = Dense(1)(x)
+#     return Model(inputs, outputs)
+#
+# import pymc as pm
+#
+# def hw_bayesian_ensemble(ts):
+#     with pm.Model():
+#         # HW сезонность как фиксированный компонент
+#         hw_seasonal = pm.Deterministic('hw_seasonal', hw_model.seasonal)
+#
+#         # Байесовский тренд
+#         trend = pm.GaussianRandomWalk('trend', sigma=0.1, shape=len(ts))
+#
+#         # Комбинированная модель
+#         y_obs = pm.Normal('y_obs',
+#                           mu=hw_seasonal + trend,
+#                           observed=ts)
+#
+#         trace = pm.sample(1000)
+#         forecast = pm.sample_posterior_predictive(trace, var_names=['trend'])
+#     return forecast['trend'].mean(axis=0)[-12:]
+#
+#
+# from tslearn.clustering import TimeSeriesKMeans
+#
+#
+# def clustered_hw(ts, n_clusters=3):
+#     # Преобразуем в 3D-массив (примеры, время, 1 признак)
+#     X = ts.values.reshape(-1, 12, 1)  # Группируем по годам
+#
+#     # Кластеризация
+#     km = TimeSeriesKMeans(n_clusters=n_clusters)
+#     clusters = km.fit_predict(X)
+#
+#     # Прогноз для каждого кластера
+#     forecasts = []
+#     for c in range(n_clusters):
+#         cluster_ts = pd.Series(X[clusters == c].mean(axis=0).flatten())
+#         hw = ExponentialSmoothing(cluster_ts, seasonal='add').fit()
+#         forecasts.append(hw.forecast(12))
+#
+#     return np.mean(forecasts, axis=0)
+#
+#
+# import pywt
+#
+#
+# def wavelet_hw(ts, wavelet='db4'):
+#     # Декомпозиция
+#     coeffs = pywt.wavedec(ts, wavelet, level=3)
+#
+#     # Прогноз для каждой компоненты
+#     reconstructed = []
+#     for i, coeff in enumerate(coeffs):
+#         if i == 0:  # Аппроксимационная компонента
+#             hw = ExponentialSmoothing(coeff, seasonal=None).fit()
+#             recon = hw.forecast(len(coeff))
+#         else:  # Детализирующие компоненты
+#             recon = np.zeros_like(coeff)  # Шумовые компоненты не прогнозируем
+#         reconstructed.append(recon)
+#
+#     # Реконструкция
+#     return pywt.waverec(reconstructed, wavelet)[:12]
