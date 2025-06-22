@@ -82,5 +82,30 @@ def main():
     print_results(lstm_forecast_add, lstm_forecast_mul, actual_series, month_names)
 
 
+    # Загрузка календаря праздников (добавить после prepare_data)
+    try:
+        holidays_df = pd.read_csv('data/holidays.csv')
+        holidays_df['ds'] = pd.to_datetime(holidays_df['ds'])  # Prophet требует datetime
+    except FileNotFoundError:
+        print("Предупреждение: файл holidays.csv не найден. Prophet будет использован без учета праздников")
+        holidays_df = None
+
+    print('\nРезультат прогнозирования Хольта-Винтерса + Prophet')
+    prophet_forecast_add = hw_prophet_ensemble(ts,model_add,holidays_df)
+    prophet_forecast_mul = hw_prophet_ensemble(ts,hw_model=model_mul,holidays_df=holidays_df)
+
+    plot_results(
+        ts,
+        prophet_forecast_add,
+        prophet_forecast_mul,
+        actual_series,
+        model_type='HW_Prophet',
+        f1=year_labels['f1'],
+        f2=year_labels['f2'],
+        f3=year_labels['f3']
+    )
+
+    print_results(prophet_forecast_add, prophet_forecast_mul, actual_series, month_names)
+
 if __name__ == "__main__":
     main()
