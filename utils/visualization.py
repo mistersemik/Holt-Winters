@@ -61,7 +61,6 @@ def plot_results(historical, forecast_add, forecast_mul, actual, model_type='HW'
     ACTUAL_ANOMALY_COLOR = 'salmon'
     ALPHA = 0.3
 
-    # Основные подписи
     labels = {
         'historical': f"Исторические данные ({f1}-{f2})",
         'add': {
