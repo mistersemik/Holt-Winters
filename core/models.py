@@ -168,3 +168,22 @@ def build_tcn_residual_model(input_shape):
     x = Conv1D(64, kernel_size=3, dilation_rate=2, padding='causal')(x)
     outputs = Dense(1)(x)
     return Model(inputs, outputs)
+
+import pymc as pm
+
+def hw_bayesian_ensemble(ts):
+    with pm.Model():
+        # HW сезонность как фиксированный компонент
+        hw_seasonal = pm.Deterministic('hw_seasonal', hw_model.seasonal)
+
+        # Байесовский тренд
+        trend = pm.GaussianRandomWalk('trend', sigma=0.1, shape=len(ts))
+
+        # Комбинированная модель
+        y_obs = pm.Normal('y_obs',
+                          mu=hw_seasonal + trend,
+                          observed=ts)
+
+        trace = pm.sample(1000)
+        forecast = pm.sample_posterior_predictive(trace, var_names=['trend'])
+    return forecast['trend'].mean(axis=0)[-12:]
