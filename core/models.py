@@ -208,3 +208,24 @@ def clustered_hw(ts, n_clusters=3):
         forecasts.append(hw.forecast(12))
 
     return np.mean(forecasts, axis=0)
+
+
+import pywt
+
+
+def wavelet_hw(ts, wavelet='db4'):
+    # Декомпозиция
+    coeffs = pywt.wavedec(ts, wavelet, level=3)
+
+    # Прогноз для каждой компоненты
+    reconstructed = []
+    for i, coeff in enumerate(coeffs):
+        if i == 0:  # Аппроксимационная компонента
+            hw = ExponentialSmoothing(coeff, seasonal=None).fit()
+            recon = hw.forecast(len(coeff))
+        else:  # Детализирующие компоненты
+            recon = np.zeros_like(coeff)  # Шумовые компоненты не прогнозируем
+        reconstructed.append(recon)
+
+    # Реконструкция
+    return pywt.waverec(reconstructed, wavelet)[:12]
