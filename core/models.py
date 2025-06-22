@@ -123,3 +123,21 @@ def HW_LSTM(ts, hw_model, n_steps=3, n_epochs=50, n_neurons=50):
     )
 
     return pd.Series(hw_forecast.values + lstm_forecast, index=forecast_dates)
+
+from prophet import Prophet
+
+def hw_prophet_ensemble(ts, holidays_df):
+    # HW компонента
+    hw = ExponentialSmoothing(ts, seasonal='add').fit()
+    hw_residuals = ts - hw.fittedvalues
+
+    # Prophet на остатках
+    prophet_data = ts.reset_index()
+    prophet_data.columns = ['ds', 'y']
+    model = Prophet(holidays=holidays_df)
+    model.fit(prophet_data)
+    future = model.make_future_dataframe(periods=12, freq='MS')
+    prophet_forecast = model.predict(future)['yhat'][-12:]
+
+    return hw.forecast(12) + prophet_forecast.values
+
