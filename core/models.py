@@ -5,7 +5,7 @@ from pmdarima import auto_arima
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 from sklearn.preprocessing import MinMaxScaler
-
+from prophet import Prophet
 
 def build_model(data, seasonal_type='add', seasonal_periods=12):
     """
