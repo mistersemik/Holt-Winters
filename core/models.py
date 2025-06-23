@@ -81,6 +81,15 @@ def HW_LSTM(ts, hw_model, n_steps=3, n_epochs=50, n_neurons=50):
     Возвращает:
     - Прогноз на 12 периодов (pandas.Series)
     """
+
+    if hw_model is None:
+        hw_model = ExponentialSmoothing(
+            ts,
+            trend='add',
+            seasonal=seasonal_type,
+            seasonal_periods=12
+        ).fit()
+
     hw_forecast = hw_model.forecast(12)
     residuals = ts - hw_model.fittedvalues
     residuals = residuals.dropna().values.reshape(-1, 1)
