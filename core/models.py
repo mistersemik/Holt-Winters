@@ -9,7 +9,7 @@ from prophet import Prophet
 from keras.layers import Input, Conv1D, Dense
 from keras.models import Model
 
-def build_model(data, seasonal_type='add', seasonal_periods=12):
+def build_model(data, trend='add',seasonal_type='add', seasonal_periods=12):
     """
     Строит и обучает модель Хольта-Винтерса для временных рядов.
 
