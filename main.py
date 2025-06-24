@@ -56,8 +56,8 @@ def main():
     month_names = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"]
 
     # Остальной код остается прежним, но используем actual_series вместо actual_data
-    model_add = build_model(ts, seasonal_type='add')
-    model_mul = build_model(ts, seasonal_type='mul')
+    model_add = build_model(ts, trend='add', seasonal_type='add')
+    model_mul = build_model(ts, trend='mul', seasonal_type='mul')
 
     forecast_add = np.round(model_add.forecast(12)).astype(int)
     forecast_mul = np.round(model_mul.forecast(12)).astype(int)
