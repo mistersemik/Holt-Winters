@@ -6,6 +6,8 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 from sklearn.preprocessing import MinMaxScaler
 from prophet import Prophet
+from keras.layers import Input, Conv1D, Dense
+from keras.models import Model
 
 def build_model(data, seasonal_type='add', seasonal_periods=12):
     """
