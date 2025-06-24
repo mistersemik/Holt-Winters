@@ -213,17 +213,72 @@ def hw_prophet_ensemble(ts, hw_model=None, holidays_df=None, seasonal_type='add'
 #     xgb_forecast = selector.predict(exog_features[-12:])
 #
 #     return hw.forecast(12) + xgb_forecast
-#
-# from keras.layers import Input, Conv1D, Dense
-# from keras.models import Model
-#
-# def build_tcn_residual_model(input_shape):
-#     inputs = Input(shape=input_shape)
-#     x = Conv1D(64, kernel_size=3, dilation_rate=1, padding='causal')(inputs)
-#     x = Conv1D(64, kernel_size=3, dilation_rate=2, padding='causal')(x)
-#     outputs = Dense(1)(x)
-#     return Model(inputs, outputs)
-#
+
+def build_hw_tcn_model(hw_model, ts, n_steps=24, forecast_steps=12):
+    """
+    Создает и возвращает комбинированный прогноз HW-TCN
+
+    Параметры:
+        hw_model: обученная модель Хольта-Винтерса
+        ts: исходный временной ряд (pd.Series)
+        n_steps: размер окна для TCN
+        forecast_steps: количество шагов прогноза
+
+    Возвращает:
+        tuple: (combined_forecast, hw_forecast, tcn_forecast, forecast_dates)
+    """
+    # Вычисляем остатки модели
+    residuals = ts - hw_model.fittedvalues
+
+    # Функция для создания последовательностей (вложенная)
+    def create_sequences(data, n_steps):
+        X, y = [], []
+        for i in range(len(data) - n_steps):
+            X.append(data[i:i + n_steps])
+            y.append(data[i + n_steps])
+        return np.array(X), np.array(y)
+
+    def build_tcn_residual_model(input_shape):
+        """Создает архитектуру TCN модели для остатков"""
+        inputs = Input(shape=input_shape)
+        x = Conv1D(64, kernel_size=3, dilation_rate=1, padding='causal')(inputs)
+        x = Conv1D(64, kernel_size=3, dilation_rate=2, padding='causal')(x)
+        outputs = Dense(1)(x)
+        return Model(inputs, outputs)
+
+    # Подготовка данных для TCN
+    X, y = create_sequences(residuals.dropna().values, n_steps=n_steps)
+    X = X.reshape(*X.shape, 1)
+
+    # Построение и обучение TCN
+    tcn_model = build_tcn_residual_model(input_shape=(n_steps, 1))
+    tcn_model.compile(optimizer='adam', loss='mse')
+    tcn_model.fit(X, y, epochs=50, batch_size=32, verbose=0)
+
+    # Прогнозирование остатков
+    last_sequence = residuals[-n_steps:].values.reshape(1, n_steps, 1)
+    tcn_forecast = []
+    for _ in range(forecast_steps):
+        pred = tcn_model.predict(last_sequence, verbose=0)[0, -1, 0]
+        tcn_forecast.append(pred)
+        last_sequence = np.roll(last_sequence, -1, axis=1)
+        last_sequence[0, -1, 0] = pred
+
+    # Прогноз основной модели
+    hw_forecast = hw_model.forecast(forecast_steps)
+
+    # Комбинированный прогноз
+    combined_forecast = hw_forecast.values + tcn_forecast
+
+    # Даты для прогноза
+    forecast_dates = pd.date_range(
+        start=ts.index[-1] + pd.DateOffset(months=1),
+        periods=forecast_steps,
+        freq='MS'
+    )
+
+    return combined_forecast, hw_forecast, tcn_forecast, forecast_dates
+
 # import pymc as pm
 #
 # def hw_bayesian_ensemble(ts):
