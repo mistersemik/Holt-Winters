@@ -145,6 +145,7 @@ def hw_prophet_ensemble(ts, hw_model=None, holidays_df=None, trend='add', season
         ts (pd.Series): Временной ряд с DatetimeIndex
         hw_model (optional): Готовая модель ExponentialSmoothing (если None - будет создана новая)
         holidays_df (pd.DataFrame, optional): Даты праздников в формате Prophet
+        - trend (str): 'add' для аддитивного или 'mul' для мультипликативного тренда
         seasonal_type (str): 'add' для аддитивной или 'mul' для мультипликативной сезонности
 
     Возвращает:
