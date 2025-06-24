@@ -23,7 +23,7 @@ def build_model(data, trend='add',seasonal_type='add', seasonal_periods=12):
     """
     model = ExponentialSmoothing(
         data,
-        trend='add',
+        trend=trend,
         seasonal=seasonal_type,
         seasonal_periods=seasonal_periods,
         initialization_method='heuristic',
