@@ -93,8 +93,8 @@ def main():
         holidays_df = None
 
     print('\nРезультат прогнозирования Хольта-Винтерса + Prophet')
-    prophet_forecast_add = hw_prophet_ensemble(ts,model_add,holidays_df)
-    prophet_forecast_mul = hw_prophet_ensemble(ts,hw_model=model_mul,holidays_df=holidays_df)
+    prophet_forecast_add = hw_prophet_ensemble(ts,model_add,holidays_df, trend='add')
+    prophet_forecast_mul = hw_prophet_ensemble(ts,hw_model=model_mul,holidays_df=holidays_df, trend='mul')
 
     plot_results(
         ts,
