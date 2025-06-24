@@ -86,6 +86,8 @@ def main():
     try:
         holidays_df = pd.read_csv('data/holidays.csv')
         holidays_df['ds'] = pd.to_datetime(holidays_df['ds'])  # Prophet требует datetime
+        # print("Успешно загружено праздников:", len(holidays_df))
+        # print(holidays_df.head())
     except FileNotFoundError:
         print("Предупреждение: файл holidays.csv не найден. Prophet будет использован без учета праздников")
         holidays_df = None
