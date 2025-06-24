@@ -166,7 +166,7 @@ def hw_prophet_ensemble(ts, hw_model=None, holidays_df=None, trend='add', season
     if hw_model is None:
         hw_model = ExponentialSmoothing(
             ts,
-            trend='add',
+            trend=trend,
             seasonal=seasonal_type,
             seasonal_periods=12
         ).fit()
