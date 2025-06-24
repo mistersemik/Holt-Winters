@@ -89,7 +89,7 @@ def HW_LSTM(ts, hw_model=None, trend='add', seasonal_type='add', n_steps=3, n_ep
     if hw_model is None:
         hw_model = ExponentialSmoothing(
             ts,
-            trend='add',
+            trend=trend,
             seasonal=seasonal_type,
             seasonal_periods=12
         ).fit()
