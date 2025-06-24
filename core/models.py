@@ -76,6 +76,7 @@ def HW_LSTM(ts, hw_model=None, trend='add', seasonal_type='add', n_steps=3, n_ep
     Параметры:
     - ts: исходный временной ряд (pandas.Series)
     - hw_model: обученная модель Хольта-Винтерса
+    - trend (str): 'add' для аддитивного или 'mul' для мультипликативного тренда
     - seasonal_type (str): 'add' для аддитивной или 'mul' для мультипликативной сезонности
     - n_steps: количество временных шагов для LSTM (по умолчанию 3)
     - n_epochs: количество эпох обучения LSTM (по умолчанию 50)
