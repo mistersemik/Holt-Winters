@@ -17,8 +17,12 @@ __Действующая структура проекта:__
 │   │   calculations.py  # Вычисления и метрики
 │   │   preprocessing.py # Подготовка данных
 │
-└───utils/
-    │   visualization.py # Визуализация
+├───utils/
+│    │   visualization.py # Визуализация
+│  
+└───data/
+     │     holidays.csv   # Праздничные дни (РФ)
+ 
 ```
 - *main.py* - программа и функции
 - *config.py* - файл конфигураций
