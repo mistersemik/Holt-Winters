@@ -4,7 +4,7 @@ import pandas as pd
 from config import historical_data, actual_data, year
 from core.preprocessing import prepare_data
 from utils.visualization import plot_results
-from core.models import build_model, HW_ARMIMA, HW_LSTM, hw_prophet_ensemble#, hw_xgboost_ensemble, \
+from core.models import build_model, HW_ARMIMA, HW_LSTM, hw_prophet_ensemble, build_hw_tcn_model#, hw_xgboost_ensemble, \
     #hw_bayesian_ensemble, clustered_hw, wavelet_hw
 from core.calculations import calculate_metrics
 
@@ -108,6 +108,34 @@ def main():
     )
 
     print_results(prophet_forecast_add, prophet_forecast_mul, actual_series, month_names)
+
+
+
+    combined_add, hw_forecast_add, tcn_forecast_add, dates_add = build_hw_tcn_model(
+        model_add, ts, n_steps=24, forecast_steps=12
+    )
+    combined_mul, hw_forecast_mul, tcn_forecast_mul, dates_mul = build_hw_tcn_model(
+        model_mul, ts, n_steps=24, forecast_steps=12
+    )
+
+    forecast_series_add = pd.Series(combined_add, index=dates_add)
+    forecast_series_mul = pd.Series(combined_mul, index=dates_mul)
+
+    print('\nРезультат прогнозирования Хольта-Винтерса + TCN')
+
+    # 5. Визуализация
+    plot_results(
+        ts,
+        forecast_series_add,
+        forecast_series_mul,  # Для мультипликативного варианта (можно изменить)
+        actual_series,
+        model_type='HW_TCN',
+        f1=year_labels['f1'],
+        f2=year_labels['f2'],
+        f3=year_labels['f3']
+    )
+
+    print_results(forecast_series_add, forecast_series_mul, actual_series, month_names)
 
 if __name__ == "__main__":
     main()
