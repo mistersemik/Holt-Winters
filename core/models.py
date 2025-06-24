@@ -15,6 +15,7 @@ def build_model(data, trend='add',seasonal_type='add', seasonal_periods=12):
 
     Параметры:
     - data: pandas.Series - временной ряд для обучения
+    - trend (str): 'add' для аддитивного или 'mul' для мультипликативного тренда
     - seasonal_type: str - тип сезонности ('add' - аддитивная, 'mul' - мультипликативная)
     - seasonal_periods: int - количество периодов в сезонном цикле (по умолчанию 12 для месячных данных)
 
