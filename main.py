@@ -127,7 +127,7 @@ def main():
     plot_results(
         ts,
         forecast_series_add,
-        forecast_series_mul,  # Для мультипликативного варианта (можно изменить)
+        forecast_series_mul,
         actual_series,
         model_type='HW_TCN',
         f1=year_labels['f1'],
