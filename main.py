@@ -137,5 +137,29 @@ def main():
 
     print_results(forecast_series_add, forecast_series_mul, actual_series, month_names)
 
+
+    # Байесовский ансамбль
+    try:
+        print("Запуск байесовского ансамбля...")
+        bayesian_forecast_add, trace = hw_bayesian_ensemble(ts, model_add)
+        bayesian_forecast_mul, trace = hw_bayesian_ensemble(ts, model_mul)
+
+        plot_results(
+            ts,
+            bayesian_forecast_add,
+            bayesian_forecast_mul,
+            actual_series,
+            model_type='HW_Bayesian',
+            f1=f1,
+            f2=f2,
+            f3=f3
+        )
+
+        print_results(bayesian_forecast_add, bayesian_forecast_mul, actual_series, month_names)
+
+    except Exception as e:
+        print(f"Ошибка в байесовском ансамбле: {str(e)}")
+
+
 if __name__ == "__main__":
     main()
