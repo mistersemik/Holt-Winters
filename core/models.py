@@ -351,27 +351,102 @@ def hw_bayesian_ensemble(ts, hw_model, forecast_steps=12):
     )
 
     return pd.Series(combined_forecast, index=forecast_dates), trace
-#
-#
-# from tslearn.clustering import TimeSeriesKMeans
-#
-#
-# def clustered_hw(ts, n_clusters=3):
-#     # Преобразуем в 3D-массив (примеры, время, 1 признак)
-#     X = ts.values.reshape(-1, 12, 1)  # Группируем по годам
-#
-#     # Кластеризация
-#     km = TimeSeriesKMeans(n_clusters=n_clusters)
-#     clusters = km.fit_predict(X)
-#
-#     # Прогноз для каждого кластера
-#     forecasts = []
-#     for c in range(n_clusters):
-#         cluster_ts = pd.Series(X[clusters == c].mean(axis=0).flatten())
-#         hw = ExponentialSmoothing(cluster_ts, seasonal='add').fit()
-#         forecasts.append(hw.forecast(12))
-#
-#     return np.mean(forecasts, axis=0)
+
+
+def clustered_hw(ts: pd.Series, n_clusters: int = 3) -> Tuple[pd.Series, pd.Series]:
+    """
+    Упрощённая кластерно-взвешенная модель Хольта-Винтерса
+
+    Параметры:
+        ts: Исходный временной ряд
+        n_clusters: Количество кластеров
+
+    Возвращает:
+        tuple: (forecast, cluster_weights) - прогноз и веса кластеров
+    """
+    # 1. Проверка и подготовка данных
+    ts_values = ts.values
+    ts_length = len(ts_values)
+
+    # Минимальное количество данных - 1 год
+    if ts_length < 12:
+        raise ValueError("Необходим минимум 12 месяцев данных")
+
+    # 2. Группировка по годам с дополнением
+    n_years = ts_length // 12
+    remainder = ts_length % 12
+
+    if remainder > 0:
+        # Дополняем последний год средними значениями
+        last_year_mean = np.mean(ts_values[-remainder:])
+        padded_values = np.concatenate([
+            ts_values,
+            np.full(12 - remainder, last_year_mean)
+        ])
+        n_years += 1
+    else:
+        padded_values = ts_values
+
+    X = padded_values.reshape(n_years, 12)
+
+    # 3. Автокоррекция числа кластеров
+    n_clusters = min(n_clusters, n_years)
+    if n_clusters < 1:
+        n_clusters = 1
+
+    # 4. Кластеризация с обработкой ошибок
+    try:
+        km = TimeSeriesKMeans(
+            n_clusters=n_clusters,
+            metric="dtw",
+            random_state=42,
+            n_init=3
+        )
+        clusters = km.fit_predict(X.reshape(n_years, 12, 1))
+    except Exception as e:
+        warn(f"Ошибка кластеризации: {str(e)}. Используется один кластер.")
+        clusters = np.zeros(n_years)
+
+    # 5. Прогнозирование для кластеров
+    forecasts = []
+    cluster_weights = []
+
+    for c in range(n_clusters):
+        cluster_mask = (clusters == c)
+        if sum(cluster_mask) == 0:
+            continue
+
+        cluster_data = X[cluster_mask]
+        cluster_weight = len(cluster_data) / n_years
+        cluster_weights.append(cluster_weight)
+
+        # Усредненный ряд кластера
+        cluster_ts = pd.Series(cluster_data.mean(axis=0))
+
+        # Простая модель для кластера
+        try:
+            forecast = cluster_ts.values[-12:]  # Используем последний год как прогноз
+            forecasts.append(forecast)
+        except:
+            forecasts.append(np.array([cluster_ts.mean()] * 12))
+
+    # 6. Взвешенная комбинация прогнозов
+    if len(forecasts) == 0:
+        final_forecast = np.array([ts_values.mean()] * 12)
+    else:
+        final_forecast = np.average(forecasts, axis=0, weights=cluster_weights)
+
+    # 7. Формирование результата
+    forecast_dates = pd.date_range(
+        start=ts.index[-1] + pd.DateOffset(months=1),
+        periods=12,
+        freq='MS'
+    )
+
+    return pd.Series(final_forecast, index=forecast_dates), pd.Series(
+        cluster_weights,
+        index=[f'Cluster{i + 1}' for i in range(len(cluster_weights))]
+    )
 #
 #
 # import pywt
