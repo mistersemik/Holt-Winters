@@ -280,24 +280,77 @@ def build_hw_tcn_model(hw_model, ts, n_steps=24, forecast_steps=12):
 
     return combined_forecast, hw_forecast, tcn_forecast, forecast_dates
 
-# import pymc as pm
-#
-# def hw_bayesian_ensemble(ts):
-#     with pm.Model():
-#         # HW сезонность как фиксированный компонент
-#         hw_seasonal = pm.Deterministic('hw_seasonal', hw_model.seasonal)
-#
-#         # Байесовский тренд
-#         trend = pm.GaussianRandomWalk('trend', sigma=0.1, shape=len(ts))
-#
-#         # Комбинированная модель
-#         y_obs = pm.Normal('y_obs',
-#                           mu=hw_seasonal + trend,
-#                           observed=ts)
-#
-#         trace = pm.sample(1000)
-#         forecast = pm.sample_posterior_predictive(trace, var_names=['trend'])
-#     return forecast['trend'].mean(axis=0)[-12:]
+def hw_bayesian_ensemble(ts, hw_model, forecast_steps=12):
+    """
+    Байесовский ансамбль с моделью Хольта-Винтерса
+
+    Параметры:
+        ts: pandas.Series - исходный временной ряд
+        hw_model: обученная модель Хольта-Винтерса
+        forecast_steps: int - количество прогнозируемых периодов
+
+    Возвращает:
+        tuple: (forecast_series, trace) - прогноз и trace модели
+    """
+    # 1. Получаем fitted values и остатки
+    fitted = hw_model.fittedvalues
+    residuals = ts - fitted
+
+    # 2. Создаем байесовскую модель для остатков
+    with pm.Model() as model:
+        # Моделируем остатки как случайное блуждание
+        sigma = pm.HalfNormal('sigma', 1)
+        resid_process = pm.GaussianRandomWalk(
+            'resid_process',
+            sigma=sigma,
+            shape=len(residuals)
+        )
+
+        # Модель наблюдений
+        pm.Normal(
+            'obs',
+            mu=resid_process,
+            sigma=0.1,
+            observed=residuals.values
+        )
+
+        # Сэмплирование
+        trace = pm.sample(
+            1000,
+            tune=1000,
+            chains=2,
+            target_accept=0.9,
+            progressbar=False
+        )
+
+        # Прогнозирование остатков
+        with model:
+            # Создаем новые узлы для прогноза
+            resid_forecast = pm.GaussianRandomWalk(
+                'resid_forecast',
+                sigma=sigma,
+                shape=forecast_steps
+            )
+
+            # Генерируем прогноз
+            forecast = pm.sample_posterior_predictive(
+                trace,
+                var_names=['resid_forecast']
+            )
+
+    # 3. Комбинируем с прогнозом HW
+    hw_forecast = hw_model.forecast(forecast_steps)
+    bayesian_resid_forecast = forecast.posterior_predictive['resid_forecast'].mean(axis=(0, 1))
+    combined_forecast = hw_forecast + bayesian_resid_forecast
+
+    # 4. Формируем результат
+    forecast_dates = pd.date_range(
+        start=ts.index[-1] + pd.DateOffset(months=1),
+        periods=forecast_steps,
+        freq='MS'
+    )
+
+    return pd.Series(combined_forecast, index=forecast_dates), trace
 #
 #
 # from tslearn.clustering import TimeSeriesKMeans
