@@ -8,6 +8,7 @@ from sklearn.preprocessing import MinMaxScaler
 from prophet import Prophet
 from keras.layers import Input, Conv1D, Dense
 from keras.models import Model
+import pymc as pm
 
 def build_model(data, trend='add',seasonal_type='add', seasonal_periods=12):
     """
