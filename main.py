@@ -5,7 +5,7 @@ from config import historical_data, actual_data, year
 from core.preprocessing import prepare_data
 from utils.visualization import plot_results
 from core.models import build_model, HW_ARMIMA, HW_LSTM, hw_prophet_ensemble, build_hw_tcn_model#, hw_xgboost_ensemble, \
-    #hw_bayesian_ensemble, clustered_hw, wavelet_hw
+from core.models import hw_bayesian_ensemble#, clustered_hw, wavelet_hw
 from core.calculations import calculate_metrics
 
 import warnings
