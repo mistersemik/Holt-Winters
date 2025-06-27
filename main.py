@@ -161,5 +161,56 @@ def main():
         print(f"Ошибка в байесовском ансамбле: {str(e)}")
 
 
+# Прогнозирование с кластеризацией
+    try:
+        # Упрощенный вызов без HW модели
+        cluster_forecast, weights = clustered_hw(ts, n_clusters=3)
+
+        # Вывод информации о кластерах
+        print("\nВеса кластеров:")
+        print(weights.to_string())
+
+        # Используем одинаковый прогноз для аддитивной и мультипликативной версий
+        # (можно добавить раздельную логику при необходимости)
+        cluster_forecast_add = cluster_forecast
+        cluster_forecast_mul = cluster_forecast
+
+        # Визуализация
+        plot_results(
+            ts,
+            cluster_forecast_add,
+            cluster_forecast_mul,
+            actual_series,
+            model_type='Clustered_HW',
+            f1=f1,
+            f2=f2,
+            f3=f3
+        )
+
+        # Вывод метрик
+        print_results(cluster_forecast_add, cluster_forecast_mul, actual_series, month_names)
+
+    except Exception as e:
+        print(f"Ошибка при прогнозировании: {str(e)}")
+        # Fallback - наивный прогноз
+        naive_forecast = pd.Series([ts.iloc[-1]] * 12,
+                                   index=pd.date_range(
+                                       start=ts.index[-1] + pd.DateOffset(months=1),
+                                       periods=12,
+                                       freq='MS'
+                                   ))
+        plot_results(
+            ts,
+            naive_forecast,
+            naive_forecast,
+            actual_series,
+            model_type='Naive_Fallback',
+            f1=f1,
+            f2=f2,
+            f3=f3
+        )
+        print_results(naive_forecast, naive_forecast, actual_series, month_names)
+
+
 if __name__ == "__main__":
     main()
