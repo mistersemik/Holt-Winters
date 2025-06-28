@@ -8,6 +8,11 @@ from core.models import build_model, HW_ARMIMA, HW_LSTM, hw_prophet_ensemble, bu
 from core.models import hw_bayesian_ensemble, clustered_hw#, wavelet_hw
 from core.calculations import calculate_metrics
 
+import logging
+logging.getLogger('cmdstanpy').disabled = True
+logging.getLogger('prophet').disabled = True
+logging.getLogger('pystan').disabled = True
+
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
