@@ -200,11 +200,6 @@ def hw_prophet_ensemble(ts, hw_model=None, holidays_df=None, trend='add', season
     # 6. Комбинация прогнозов
     return hw_model.forecast(12) + prophet_forecast.values
 
-#
-# from xgboost import XGBRegressor
-# from sklearn.feature_selection import RFE
-#
-#
 # def hw_xgboost_ensemble(ts, exog_features):
 #     # HW компонента
 #     hw = ExponentialSmoothing(ts).fit()
@@ -355,8 +350,7 @@ def hw_bayesian_ensemble(ts, hw_model, forecast_steps=12):
 
     return pd.Series(combined_forecast, index=forecast_dates), trace
 
-
-def clustered_hw(ts: pd.Series, n_clusters: int = 3) -> Tuple[pd.Series, pd.Series]:
+def clustered_hw(ts, n_clusters=3, hw_model=None, trend='add', seasonal_type='add'):
     """
     Упрощённая кластерно-взвешенная модель Хольта-Винтерса
 
@@ -368,7 +362,7 @@ def clustered_hw(ts: pd.Series, n_clusters: int = 3) -> Tuple[pd.Series, pd.Seri
         seasonal_type: 'add' или 'mul' сезонность
 
     Возвращает:
-        tuple: (forecast, cluster_weights) - прогноз и веса кластеров
+        Кортеж: (прогноз, веса кластеров) - оба pandas Series
     """
     # 1. Проверка входных данных
     if not isinstance(ts, pd.Series):
