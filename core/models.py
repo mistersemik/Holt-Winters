@@ -12,6 +12,7 @@ import pymc as pm
 from tslearn.clustering import TimeSeriesKMeans
 from typing import Tuple
 from warnings import warn
+import pywt
 
 def build_model(data, trend='add',seasonal_type='add', seasonal_periods=12):
     """
