@@ -367,7 +367,13 @@ def clustered_hw(ts: pd.Series, n_clusters: int = 3) -> Tuple[pd.Series, pd.Seri
     Возвращает:
         tuple: (forecast, cluster_weights) - прогноз и веса кластеров
     """
-    # 1. Проверка и подготовка данных
+    # 1. Проверка входных данных
+    if not isinstance(ts, pd.Series):
+        raise TypeError("ts должен быть pandas Series")
+
+    if not isinstance(ts.index, pd.DatetimeIndex):
+        raise ValueError("Индекс ts должен быть DatetimeIndex")
+
     ts_values = ts.values
     ts_length = len(ts_values)
 
