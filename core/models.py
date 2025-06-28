@@ -361,8 +361,11 @@ def clustered_hw(ts: pd.Series, n_clusters: int = 3) -> Tuple[pd.Series, pd.Seri
     Упрощённая кластерно-взвешенная модель Хольта-Винтерса
 
     Параметры:
-        ts: Исходный временной ряд
-        n_clusters: Количество кластеров
+        ts: Исходный временной ряд (pandas Series)
+        n_clusters: Количество кластеров (по умолчанию 3)
+        hw_model: Готовая модель ExponentialSmoothing (опционально)
+        trend: 'add' или 'mul' тренд
+        seasonal_type: 'add' или 'mul' сезонность
 
     Возвращает:
         tuple: (forecast, cluster_weights) - прогноз и веса кластеров
