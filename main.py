@@ -10,7 +10,8 @@ from core.calculations import calculate_metrics
 
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
-
+from statsmodels.tools.sm_exceptions import ConvergenceWarning
+warnings.simplefilter('ignore', ConvergenceWarning)
 
 def print_results(forecast_add, forecast_mul, actual, month_names):
     """
