@@ -375,7 +375,30 @@ def clustered_hw(ts: pd.Series, n_clusters: int = 3) -> Tuple[pd.Series, pd.Seri
     if ts_length < 12:
         raise ValueError("Необходим минимум 12 месяцев данных")
 
-    # 2. Группировка по годам с дополнением
+    # Проверка параметров модели
+    if trend not in ['add', 'mul']:
+        raise ValueError("trend должен быть 'add' или 'mul'")
+
+    if seasonal_type not in ['add', 'mul']:
+        raise ValueError("seasonal_type должен быть 'add' или 'mul'")
+
+    # 2. Если модель не предоставлена, инициализируем новую
+    if hw_model is None:
+        hw_model = ExponentialSmoothing(
+            ts_values,
+            trend=trend,
+            seasonal=seasonal_type,
+            seasonal_periods=12
+        ).fit()
+    else:
+        # Проверка переданной модели
+        if not isinstance(hw_model, ExponentialSmoothing):
+            raise TypeError("hw_model должен быть ExponentialSmoothing")
+
+        if not hasattr(hw_model, 'fittedvalues'):
+            raise ValueError("Модель должна быть обучена (иметь fittedvalues)")
+
+    # 3. Группировка по годам с дополнением
     n_years = ts_length // 12
     remainder = ts_length % 12
 
