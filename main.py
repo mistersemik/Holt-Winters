@@ -250,5 +250,39 @@ def main():
         print_results(naive_forecast, naive_forecast, actual_series, month_names)
 
 
+    try:
+        # Вейвлет-прогноз
+        wv_forecast_add = wavelet_hw(
+            ts,
+            wavelet='db4',
+            trend='add',
+            seasonal_type='add'
+        )
+
+        wv_forecast_mul = wavelet_hw(
+            ts,
+            wavelet='db4',
+            trend='mul',
+            seasonal_type='mul'
+        )
+
+        # Визуализация
+        plot_results(
+            ts,
+            wv_forecast_add,
+            wv_forecast_mul,
+            actual_series,
+            model_type='Wavelet_HW',
+            f1=year_labels['f1'],
+            f2=year_labels['f2'],
+            f3=year_labels['f3']
+        )
+
+        # Вывод метрик
+        print_results(wv_forecast_add, wv_forecast_mul, actual_series, month_names)
+
+    except Exception as e:
+        print(f"Ошибка: {str(e)}")
+
 if __name__ == "__main__":
     main()
