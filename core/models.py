@@ -477,24 +477,89 @@ def clustered_hw(ts, n_clusters=3, hw_model=None, trend='add', seasonal_type='ad
         cluster_weights,
         index=[f'Cluster{i + 1}' for i in range(len(cluster_weights))]
     )
-#
-#
-# import pywt
-#
-#
-# def wavelet_hw(ts, wavelet='db4'):
-#     # Декомпозиция
-#     coeffs = pywt.wavedec(ts, wavelet, level=3)
-#
-#     # Прогноз для каждой компоненты
-#     reconstructed = []
-#     for i, coeff in enumerate(coeffs):
-#         if i == 0:  # Аппроксимационная компонента
-#             hw = ExponentialSmoothing(coeff, seasonal=None).fit()
-#             recon = hw.forecast(len(coeff))
-#         else:  # Детализирующие компоненты
-#             recon = np.zeros_like(coeff)  # Шумовые компоненты не прогнозируем
-#         reconstructed.append(recon)
-#
-#     # Реконструкция
-#     return pywt.waverec(reconstructed, wavelet)[:12]
+
+def wavelet_hw(ts, wavelet='db4', hw_model=None, trend='add', seasonal_type='add', forecast_periods=12):
+    """
+    Улучшенная вейвлет-модель Хольта-Винтерса
+
+    Параметры:
+        ts: pd.Series - временной ряд с DatetimeIndex
+        wavelet: str - тип вейвлета ('db4', 'haar' и др.)
+        hw_model: модель ExponentialSmoothing (опционально)
+        trend: str - 'add' или 'mul' тренд
+        seasonal_type: str - 'add' или 'mul' сезонность
+        forecast_periods: int - количество периодов прогноза
+
+    Возвращает:
+        pd.Series - прогноз на указанное число периодов
+    """
+    # Проверки входных данных
+    if not isinstance(ts, pd.Series):
+        raise TypeError("ts должен быть pandas Series")
+    if not isinstance(ts.index, pd.DatetimeIndex):
+        raise ValueError("Индекс ts должен быть DatetimeIndex")
+    if len(ts) < 24:  # Увеличили минимальное количество данных
+        raise ValueError("Необходим минимум 24 наблюдения (2 полных сезона)")
+
+    try:
+        # Нормализация данных
+        ts_values = ts.values.astype(float)
+        mean_val, std_val = ts_values.mean(), ts_values.std()
+        ts_normalized = (ts_values - mean_val) / std_val if std_val > 0 else ts_values - mean_val
+
+        # Вейвлет-разложение
+        max_level = pywt.dwt_max_level(len(ts_normalized), pywt.Wavelet(wavelet))
+        level = min(3, max_level) if max_level is not None else 3
+        coeffs = pywt.wavedec(ts_normalized, wavelet, level=level, mode='per')
+
+        # Прогнозирование компонент
+        forecast_coeffs = []
+        for i, coeff in enumerate(coeffs):
+            if i == 0:  # Только для аппроксимационной компоненты
+                if hw_model is None:
+                    try:
+                        model = ExponentialSmoothing(
+                            coeff,
+                            trend=trend,
+                            seasonal=seasonal_type if len(coeff) >= 24 else None,
+                            # Отключаем сезонность для коротких рядов
+                            seasonal_periods=12
+                        ).fit()
+                    except ValueError:
+                        # Fallback для случаев, когда не хватает данных для сезонности
+                        model = ExponentialSmoothing(
+                            coeff,
+                            trend=trend,
+                            seasonal=None,
+                            seasonal_periods=12
+                        ).fit()
+                else:
+                    model = hw_model
+                fc = model.forecast(forecast_periods)
+            else:
+                fc = np.zeros(forecast_periods)
+            forecast_coeffs.append(fc)
+
+        # Вейвлет-реконструкция
+        forecast_normalized = pywt.waverec(forecast_coeffs, wavelet)[:forecast_periods]
+
+        # Обратное преобразование нормализации
+        forecast = forecast_normalized * std_val + mean_val
+
+        # Формирование результата
+        forecast_dates = pd.date_range(
+            start=ts.index[-1] + pd.DateOffset(months=1),
+            periods=forecast_periods,
+            freq='MS'
+        )
+
+        return pd.Series(forecast, index=forecast_dates)
+
+    except Exception as e:
+        warn(f"Ошибка в wavelet_hw: {str(e)}. Возвращаем наивный прогноз.")
+        # Fallback - наивный прогноз
+        return pd.Series([ts.iloc[-1]] * forecast_periods, index=pd.date_range(
+            start=ts.index[-1] + pd.DateOffset(months=1),
+            periods=forecast_periods,
+            freq='MS'
+        ))
