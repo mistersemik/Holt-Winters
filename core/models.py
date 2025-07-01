@@ -84,7 +84,7 @@ def HW_ARMIMA(ts, hw_model):
 
     return pd.Series(hw_forecast.values + arima_forecast, index=forecast_dates) # Комбинируем прогнозы
 
-def HW_LSTM(ts, hw_model=None, trend='add', seasonal_type='add', n_steps=3, n_epochs=50, n_neurons=50):
+def HW_LSTM(ts, hw_model, n_steps=3, n_epochs=50, n_neurons=50):
     """
     Комбинированная модель Хольта-Винтерса + LSTM.
 
