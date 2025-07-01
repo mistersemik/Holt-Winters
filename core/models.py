@@ -102,12 +102,7 @@ def HW_LSTM(ts, hw_model=None, trend='add', seasonal_type='add', n_steps=3, n_ep
     """
 
     if hw_model is None:
-        hw_model = ExponentialSmoothing(
-            ts,
-            trend=trend,
-            seasonal=seasonal_type,
-            seasonal_periods=12
-        ).fit()
+        raise TypeError("Сформируйте модель используя функцию build_model. Пример: hm_model = build_model(data, trend='add',seasonal_type='add', seasonal_periods=12")
 
     hw_forecast = hw_model.forecast(12)
     residuals = ts - hw_model.fittedvalues
