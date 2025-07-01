@@ -58,12 +58,7 @@ def HW_ARMIMA(ts, hw_model):
     """
 
     if hw_model is None:
-        hw_model = ExponentialSmoothing(
-            ts,
-            trend=trend,
-            seasonal=seasonal_type,
-            seasonal_periods=12
-        ).fit()
+        raise TypeError("Сформируйте модель используя функцию build_model. Пример: hm_model = build_model(data, trend='add',seasonal_type='add', seasonal_periods=12")
 
     hw_forecast = hw_model.forecast(12) # Получаем прогноз Хольта-Винтерса
     residuals = ts - hw_model.fittedvalues # Вычисляем остатки (фактические значения - fitted values модели)
