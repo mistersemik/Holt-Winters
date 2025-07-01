@@ -27,6 +27,13 @@ def build_model(data, trend='add',seasonal_type='add', seasonal_periods=12):
     Возвращает:
     - Обученную модель ExponentialSmoothing
     """
+
+    if trend not in ['add', 'mul']:
+        raise ValueError("trend должен быть 'add' или 'mul'")
+
+    if seasonal_type not in ['add', 'mul']:
+        raise ValueError("seasonal_type должен быть 'add' или 'mul'")
+
     model = ExponentialSmoothing(
         data,
         trend=trend,
