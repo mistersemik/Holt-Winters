@@ -113,8 +113,8 @@ def main():
 
     # Добавлен вызов HW_LSTMM
     print('\nРезультат прогнозирования Хольта-Винтерса & LSTM')
-    lstm_forecast_add = HW_LSTM(ts, model_add, trend='add')
-    lstm_forecast_mul = HW_LSTM(ts, model_mul, trend='mul')
+    lstm_forecast_add = HW_LSTM(ts, model_add)
+    lstm_forecast_mul = HW_LSTM(ts, model_mul)
 
     plot_results(ts, lstm_forecast_add, lstm_forecast_mul, actual_series, model_type='HW_LSTM', f1=f1, f2=f2, f3=f3)
     print_results(lstm_forecast_add, lstm_forecast_mul, actual_series, month_names)
