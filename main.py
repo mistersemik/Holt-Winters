@@ -273,9 +273,9 @@ def main():
             wv_forecast_mul,
             actual_series,
             model_type='Wavelet_HW',
-            f1=year_labels['f1'],
-            f2=year_labels['f2'],
-            f3=year_labels['f3']
+            f1=f1,
+            f2=f2,
+            f3=f3
         )
 
         # Вывод метрик
