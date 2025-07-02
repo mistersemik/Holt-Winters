@@ -205,18 +205,80 @@ def hw_prophet_ensemble(ts, hw_model=None, holidays_df=None, trend='add', season
     # 6. Комбинация прогнозов
     return hw_model.forecast(12) + prophet_forecast.values
 
-# def hw_xgboost_ensemble(ts, exog_features):
-#     # HW компонента
-#     hw = ExponentialSmoothing(ts).fit()
-#     residuals = ts - hw.fittedvalues
-#
-#     # XGBoost на остатках
-#     model = XGBRegressor()
-#     selector = RFE(model, n_features_to_select=5)
-#     selector.fit(exog_features[:-12], residuals.dropna())
-#     xgb_forecast = selector.predict(exog_features[-12:])
-#
-#     return hw.forecast(12) + xgb_forecast
+def hw_xgboost_ensemble(ts, hw_model, exog_features=None, forecast_steps=12):
+    """
+    Комбинированная модель Хольта-Винтерса + XGBoost для остатков с внешними признаками
+
+    Параметры:
+        ts: pd.Series - временной ряд для прогнозирования
+        hw_model: обученная модель ExponentialSmoothing
+        exog_features: pd.DataFrame - внешние признаки (по умолчанию None)
+        forecast_steps: int - количество шагов прогноза (по умолчанию 12)
+
+    Возвращает:
+        pd.Series - комбинированный прогноз
+    """
+    if hw_model is None:
+        raise TypeError(
+            "Сформируйте модель используя функцию build_model. Пример: hw_model = build_model(data, trend='add', seasonal_type='add', seasonal_periods=12)")
+
+    # 1. Прогноз HW
+    hw_forecast = hw_model.forecast(forecast_steps)
+
+    # 2. Остатки модели
+    residuals = ts - hw_model.fittedvalues
+    residuals = residuals.dropna()
+
+    # 3. Если нет внешних признаков, используем лаговые признаки
+    if exog_features is None:
+        # Создаем лаговые признаки из остатков
+        lag_features = pd.DataFrame({
+            'lag1': residuals.shift(1),
+            'lag2': residuals.shift(2),
+            'lag3': residuals.shift(3)
+        }).dropna()
+
+        X_train = lag_features.iloc[:-forecast_steps]
+        y_train = residuals[3:-forecast_steps]  # соответствие лагам
+        X_test = lag_features.iloc[-forecast_steps:]
+    else:
+        # Проверка совпадения индексов
+        if not exog_features.index.equals(ts.index):
+            raise ValueError("Индексы exog_features должны совпадать с индексами ts")
+
+        X_train = exog_features.iloc[:-forecast_steps]
+        y_train = residuals.iloc[:-forecast_steps]
+        X_test = exog_features.iloc[-forecast_steps:]
+
+    # 4. Обучение XGBoost
+    from xgboost import XGBRegressor
+    from sklearn.feature_selection import RFE
+
+    model = XGBRegressor(objective='reg:squarederror', n_estimators=100)
+
+    # Автоматический выбор признаков
+    if len(X_train.columns) > 1:
+        selector = RFE(model, n_features_to_select=min(3, len(X_train.columns)))
+        selector.fit(X_train, y_train)
+        xgb_model = selector.estimator_
+    else:
+        model.fit(X_train, y_train)
+        xgb_model = model
+
+    # 5. Прогнозирование остатков
+    resid_forecast = xgb_model.predict(X_test)
+
+    # 6. Комбинированный прогноз
+    combined_forecast = hw_forecast.values + resid_forecast
+
+    # 7. Формирование результата
+    forecast_dates = pd.date_range(
+        start=ts.index[-1] + pd.DateOffset(months=1),
+        periods=forecast_steps,
+        freq='MS'
+    )
+
+    return pd.Series(combined_forecast, index=forecast_dates)
 
 def build_hw_tcn_model(hw_model, ts, n_steps=24, forecast_steps=12):
     """
