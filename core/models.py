@@ -10,7 +10,6 @@ from keras.layers import Input, Conv1D, Dense
 from keras.models import Model
 import pymc as pm
 from tslearn.clustering import TimeSeriesKMeans
-from typing import Tuple
 from warnings import warn
 import pywt
 
