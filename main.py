@@ -284,5 +284,37 @@ def main():
     except Exception as e:
         print(f"Ошибка: {str(e)}")
 
+
+    # Прогнозирование с XGBoost
+    try:
+        # Загрузка внешних признаков (если есть)
+        try:
+            exog_data = pd.read_csv('data/exog_features.csv', index_col=0, parse_dates=True)
+            exog_data = exog_data.reindex(ts.index)  # Выравнивание по индексу временного ряда
+            print("Найдены внешние признаки для XGBoost")
+        except FileNotFoundError:
+            print("Файл с внешними признаками не найден, будут использованы лаговые признаки")
+            exog_data = None
+
+        print('\nРезультат прогнозирования Хольта-Винтерса + XGBoost')
+        xgb_forecast_add = hw_xgboost_ensemble(ts, model_add, exog_data)
+        xgb_forecast_mul = hw_xgboost_ensemble(ts, model_mul, exog_data)
+
+        plot_results(
+            ts,
+            xgb_forecast_add,
+            xgb_forecast_mul,
+            actual_series,
+            model_type='HW_XGBoost',
+            f1=f1,
+            f2=f2,
+            f3=f3
+        )
+
+        print_results(xgb_forecast_add, xgb_forecast_mul, actual_series, month_names)
+
+    except Exception as e:
+        print(f"Ошибка в XGBoost ансамбле: {str(e)}")
+
 if __name__ == "__main__":
     main()
