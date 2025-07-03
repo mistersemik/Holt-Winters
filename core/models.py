@@ -64,8 +64,10 @@ def HW_ARMIMA(ts, hw_model):
     """
 
     if hw_model is None:
-        raise TypeError("Сформируйте модель используя функцию build_model. Пример: hm_model = build_model(data, trend='add',seasonal_type='add', seasonal_periods=12")
-
+        raise TypeError(
+            "hw_model является обязательным параметром. "
+            "Пример: hw_model = build_model(data, trend='add', seasonal_type='add')"
+        )
     hw_forecast = hw_model.forecast(12) # Получаем прогноз Хольта-Винтерса
     residuals = ts - hw_model.fittedvalues # Вычисляем остатки (фактические значения - fitted values модели)
 
