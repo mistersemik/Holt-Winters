@@ -555,6 +555,10 @@ def wavelet_hw(ts, hw_model, wavelet='db4', forecast_periods=12):
 
     Возвращает:
         pd.Series - прогноз на указанное число периодов
+
+    Исключения:
+        TypeError: Если hw_model не предоставлен
+        ValueError: Если входные данные некорректны
     """
     # Проверки входных данных
     if hw_model is None:
