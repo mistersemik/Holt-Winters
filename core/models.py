@@ -153,7 +153,7 @@ def HW_LSTM(ts, hw_model, n_steps=3, n_epochs=50, n_neurons=50):
 
 def hw_prophet_ensemble(ts, hw_model, holidays_df=None):
     """
-    Комбинированная модель Хольта-Винтерса и Prophet с выбором типа сезонности
+    Комбинированная модель Хольта-Винтерса и Prophet для временных рядов
 
     Параметры:
         ts (pd.Series): Временной ряд с DatetimeIndex
