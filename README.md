@@ -118,3 +118,15 @@
        # Основная логика
    except:
        # Fallback на наивный прогноз
+
+## Установка зависимостей
+
+1. Создайте виртуальное окружение:
+    ```bash
+    python3.9 -m venv hw_env
+    source hw_env/bin/activate  # Linux/Mac
+    hw_env\Scripts\activate     # Windows
+
+2. Установите зависимости
+    ```bash
+   pip install -r requirements.txt
