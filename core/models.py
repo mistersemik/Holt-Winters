@@ -193,7 +193,7 @@ def hw_prophet_ensemble(ts, hw_model, holidays_df=None):
     # 3. Настройка Prophet
     prophet_model = Prophet(
         holidays=holidays_df,
-        seasonality_mode='multiplicative' if current_seasonal_type == 'mul' else 'additive',
+        seasonality_mode=seasonal_mode,
         yearly_seasonality=True,
         weekly_seasonality=False,
         daily_seasonality=False
