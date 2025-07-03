@@ -104,7 +104,10 @@ def HW_LSTM(ts, hw_model, n_steps=3, n_epochs=50, n_neurons=50):
     """
 
     if hw_model is None:
-        raise TypeError("Сформируйте модель используя функцию build_model. Пример: hm_model = build_model(data, trend='add',seasonal_type='add', seasonal_periods=12")
+        raise TypeError(
+            "hw_model является обязательным параметром. "
+            "Пример: hw_model = build_model(data, trend='add', seasonal_type='add')"
+        )
 
     hw_forecast = hw_model.forecast(12)
     residuals = ts - hw_model.fittedvalues
