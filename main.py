@@ -205,9 +205,9 @@ def main():
         hw_add_model = build_model(ts, trend='add', seasonal_type='add')
         hw_mul_model = build_model(ts, trend='mul', seasonal_type='mul')
 
-        # Вывод информации о кластерах
-        print("\nВеса кластеров:")
-        print(weights.to_string())
+        # Получаем кластерные прогнозы
+        cluster_forecast_add, weights_add = clustered_hw(ts, hw_model=hw_add_model)
+        cluster_forecast_mul, weights_mul = clustered_hw(ts, hw_model=hw_mul_model)
 
         # Используем одинаковый прогноз для аддитивной и мультипликативной версий
         # (можно добавить раздельную логику при необходимости)
