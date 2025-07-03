@@ -145,7 +145,7 @@ def HW_LSTM(ts, hw_model, n_steps=3, n_epochs=50, n_neurons=50):
 
     return pd.Series(hw_forecast.values + lstm_forecast, index=forecast_dates)
 
-def hw_prophet_ensemble(ts, hw_model=None, holidays_df=None, trend='add', seasonal_type='add'):
+def hw_prophet_ensemble(ts, hw_model, holidays_df=None):
     """
     Комбинированная модель Хольта-Винтерса и Prophet с выбором типа сезонности
 
