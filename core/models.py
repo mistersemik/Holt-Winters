@@ -176,7 +176,7 @@ def hw_prophet_ensemble(ts, hw_model, holidays_df=None):
     ... })
     >>> forecast = hw_prophet_ensemble(ts, hw_model, holidays_df=holidays)
     """
-    # 1. Компонента Хольта-Винтерса (используем готовую модель или создаем новую)
+
     if hw_model is None:
         raise TypeError(
             "hw_model является обязательным параметром. "
@@ -190,8 +190,8 @@ def hw_prophet_ensemble(ts, hw_model, holidays_df=None):
     # Определение типа сезонности из модели HW
     seasonal_mode = 'multiplicative' if getattr(hw_model, 'seasonal', None) == 'mul' else 'additive'
 
-    # 3. Настройка Prophet
-    prophet_model = Prophet(
+    # Инициализация Prophet
+    model = Prophet(
         holidays=holidays_df,
         seasonality_mode=seasonal_mode,
         yearly_seasonality=True,
@@ -199,7 +199,7 @@ def hw_prophet_ensemble(ts, hw_model, holidays_df=None):
         daily_seasonality=False
     )
 
-    # 4. Подготовка данных для Prophet (работаем с остатками)
+    # Работа с остатками
     residuals = ts - hw_model.fittedvalues
     prophet_data = residuals.reset_index()
     prophet_data.columns = ['ds', 'y']
@@ -444,80 +444,46 @@ def hw_bayesian_ensemble(ts, hw_model, forecast_steps=12):
 
 def clustered_hw(ts, hw_model, n_clusters=3):
     """
-    Упрощённая кластерно-взвешенная модель Хольта-Винтерса
+    Рабочая кластерно-взвешенная модель Хольта-Винтерса
 
     Параметры:
-        ts: Исходный временной ряд (pandas Series)
-        n_clusters: Количество кластеров (по умолчанию 3)
-        hw_model: Готовая модель ExponentialSmoothing (опционально)
-        trend: 'add' или 'mul' тренд
-        seasonal_type: 'add' или 'mul' сезонность
+        ts: pd.Series - временной ряд с DatetimeIndex
+        hw_model: обученная модель ExponentialSmoothing
+        n_clusters: int - количество кластеров (по умолчанию 3)
 
     Возвращает:
-        Кортеж: (прогноз, веса кластеров) - оба pandas Series
+        tuple: (forecast, cluster_weights) - прогноз и веса кластеров
     """
-    # 1. Проверка входных данных
+    # Проверки входных данных
     if not isinstance(ts, pd.Series):
         raise TypeError("ts должен быть pandas Series")
-
     if not isinstance(ts.index, pd.DatetimeIndex):
         raise ValueError("Индекс ts должен быть DatetimeIndex")
     if len(ts) < 24:  # Минимум 2 года данных для кластеризации
         raise ValueError("Необходимо минимум 24 периода данных")
 
+    # Получаем данные из временного ряда
     ts_values = ts.values
-    ts_length = len(ts_values)
+    n_years = len(ts_values) // 12
+    remainder = len(ts_values) % 12
 
-    # Минимальное количество данных - 1 год
-    if ts_length < 12:
-        raise ValueError("Необходим минимум 12 месяцев данных")
-
-    # Проверка параметров модели
-    if trend not in ['add', 'mul']:
-        raise ValueError("trend должен быть 'add' или 'mul'")
-
-    if seasonal_type not in ['add', 'mul']:
-        raise ValueError("seasonal_type должен быть 'add' или 'mul'")
-
-    # 2. Если модель не предоставлена, инициализируем новую
-    if hw_model is None:
-        hw_model = ExponentialSmoothing(
-            ts_values,
-            trend=trend,
-            seasonal=seasonal_type,
-            seasonal_periods=12
-        ).fit()
-    else:
-        # Проверка переданной модели
-        if not isinstance(hw_model, ExponentialSmoothing):
-            raise TypeError("hw_model должен быть ExponentialSmoothing")
-
-        if not hasattr(hw_model, 'fittedvalues'):
-            raise ValueError("Модель должна быть обучена (иметь fittedvalues)")
-
-    # 3. Группировка по годам с дополнением
-    n_years = ts_length // 12
-    remainder = ts_length % 12
-
+    # Дополняем данные до полных лет
     if remainder > 0:
-        # Дополняем последний год средними значениями
         last_year_mean = np.mean(ts_values[-remainder:])
-        padded_values = np.concatenate([
-            ts_values,
-            np.full(12 - remainder, last_year_mean)
-        ])
+        padded_values = np.concatenate([ts_values, np.full(12 - remainder, last_year_mean)])
         n_years += 1
     else:
         padded_values = ts_values
 
+    # Подготовка данных для кластеризации
     X = padded_values.reshape(n_years, 12)
 
-    # 3. Автокоррекция числа кластеров
+    # Автокоррекция числа кластеров
     n_clusters = min(n_clusters, n_years)
     if n_clusters < 1:
         n_clusters = 1
 
-    # 4. Кластеризация с обработкой ошибок
+    # Кластеризация временных рядов
     try:
         # Нормализация данных для кластеризации
         scaler = MinMaxScaler()
@@ -530,23 +496,21 @@ def clustered_hw(ts, hw_model, n_clusters=3):
         warn(f"Ошибка кластеризации: {e}. Используем все данные как один кластер")
         clusters = np.zeros(n_years)
 
-    # 5. Прогнозирование для кластеров
+    # Прогнозирование для каждого кластера
     forecasts = []
     cluster_weights = []
 
-    for c in range(n_clusters):
-        cluster_mask = (clusters == c)
-        if sum(cluster_mask) == 0:
+    for cluster_id in range(n_clusters):
+        cluster_mask = (clusters == cluster_id)
+        if not any(cluster_mask):
             continue
 
+        # Получаем данные кластера
         cluster_data = X[cluster_mask]
-        cluster_weight = len(cluster_data) / n_years
+        cluster_weight = cluster_mask.sum() / n_years
         cluster_weights.append(cluster_weight)
 
-        # Усредненный ряд кластера
-        cluster_ts = pd.Series(cluster_data.mean(axis=0))
-
-        # Простая модель для кластера
+        # Строим модель для кластера
         try:
             # Используем последний год каждого ряда в кластере
             last_years = [year_data[-12:] for year_data in cluster_data]
@@ -554,15 +518,18 @@ def clustered_hw(ts, hw_model, n_clusters=3):
             cluster_forecast = np.mean(last_years, axis=0)
             forecasts.append(cluster_forecast)
         except:
-            forecasts.append(np.array([cluster_ts.mean()] * 12))
+            # Fallback: используем среднее по кластеру
+            forecasts.append(np.array([np.mean(cluster_data)] * 12))
 
-    # 6. Взвешенная комбинация прогнозов
-    if len(forecasts) == 0:
+    # Взвешенное объединение прогнозов
+    if not forecasts:
+        # Если кластеризация не дала результатов
         final_forecast = np.array([ts_values.mean()] * 12)
+        cluster_weights = [1.0]
     else:
         final_forecast = np.average(forecasts, axis=0, weights=cluster_weights)
 
-    # 7. Формирование результата
+    # Формируем результат
     forecast_dates = pd.date_range(
         start=ts.index[-1] + pd.DateOffset(months=1),
         periods=12,
