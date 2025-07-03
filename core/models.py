@@ -233,7 +233,9 @@ def hw_xgboost_ensemble(ts, hw_model, exog_features=None, forecast_steps=12):
     """
     if hw_model is None:
         raise TypeError(
-            "Сформируйте модель используя функцию build_model. Пример: hw_model = build_model(data, trend='add', seasonal_type='add', seasonal_periods=12)")
+            "hw_model является обязательным параметром. "
+            "Пример: hw_model = build_model(data, trend='add', seasonal_type='add')"
+        )
 
     # 1. Прогноз HW
     hw_forecast = hw_model.forecast(forecast_steps)
