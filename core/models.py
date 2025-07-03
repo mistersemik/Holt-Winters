@@ -557,6 +557,11 @@ def wavelet_hw(ts, hw_model, wavelet='db4', forecast_periods=12):
         pd.Series - прогноз на указанное число периодов
     """
     # Проверки входных данных
+    if hw_model is None:
+        raise TypeError(
+            "hw_model является обязательным параметром. "
+            "Пример: hw_model = build_model(data, trend='add', seasonal_type='add')"
+        )
     if not isinstance(ts, pd.Series):
         raise TypeError("ts должен быть pandas Series")
     if not isinstance(ts.index, pd.DatetimeIndex):
