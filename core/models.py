@@ -527,7 +527,7 @@ def clustered_hw(ts, hw_model, n_clusters=3):
         km = TimeSeriesKMeans(n_clusters=n_clusters, metric="dtw", random_state=42)
         clusters = km.fit_predict(X_scaled.reshape(n_years, 12, 1))
     except Exception as e:
-        warn(f"Ошибка кластеризации: {str(e)}. Используется один кластер.")
+        warn(f"Ошибка кластеризации: {e}. Используем все данные как один кластер")
         clusters = np.zeros(n_years)
 
     # 5. Прогнозирование для кластеров
