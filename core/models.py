@@ -162,7 +162,11 @@ def hw_prophet_ensemble(ts, hw_model, holidays_df=None):
             - Обязательные колонки: 'ds' (дата), 'holiday' (название праздника)
 
     Возвращает:
-        pd.Series: Комбинированный прогноз на 12 периодов
+        pd.Series: Прогноз на 12 периодов с DatetimeIndex
+
+    Исключения:
+        TypeError: Если hw_model не предоставлена
+        ValueError: Если входные данные некорректны
 
     Пример использования:
     >>> hw_model = build_model(ts, trend='add', seasonal_type='add')
