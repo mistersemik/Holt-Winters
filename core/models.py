@@ -462,6 +462,8 @@ def clustered_hw(ts, hw_model, n_clusters=3):
 
     if not isinstance(ts.index, pd.DatetimeIndex):
         raise ValueError("Индекс ts должен быть DatetimeIndex")
+    if len(ts) < 24:  # Минимум 2 года данных для кластеризации
+        raise ValueError("Необходимо минимум 24 периода данных")
 
     ts_values = ts.values
     ts_length = len(ts_values)
