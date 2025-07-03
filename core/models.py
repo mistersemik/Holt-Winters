@@ -519,13 +519,13 @@ def clustered_hw(ts, hw_model, n_clusters=3):
 
     # 4. Кластеризация с обработкой ошибок
     try:
-        km = TimeSeriesKMeans(
-            n_clusters=n_clusters,
-            metric="dtw",
-            random_state=42,
-            n_init=3
-        )
-        clusters = km.fit_predict(X.reshape(n_years, 12, 1))
+        # Нормализация данных для кластеризации
+        scaler = MinMaxScaler()
+        X_scaled = scaler.fit_transform(X.T).T
+
+        # Кластеризация с DTW метрикой
+        km = TimeSeriesKMeans(n_clusters=n_clusters, metric="dtw", random_state=42)
+        clusters = km.fit_predict(X_scaled.reshape(n_years, 12, 1))
     except Exception as e:
         warn(f"Ошибка кластеризации: {str(e)}. Используется один кластер.")
         clusters = np.zeros(n_years)
