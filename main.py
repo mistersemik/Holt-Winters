@@ -258,7 +258,10 @@ def main():
         forecast_add = model_add.forecast(12)
         forecast_mul = model_mul.forecast(12)
 
-        # Визуализация
+        # Получаем вейвлет-прогноз (используем аддитивную модель как базовую)
+        wavelet_forecast = wavelet_hw(ts, hw_model=model_add)
+
+        # Визуализация - только аддитивная и мультипликативная модели
         plot_results(
             ts,
             wv_forecast_add,
