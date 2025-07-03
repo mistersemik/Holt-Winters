@@ -254,9 +254,9 @@ def main():
 
 
     try:
-        # Вейвлет-прогноз
-        wv_forecast_add = wavelet_hw(ts, wavelet='db4', trend='add', seasonal_type='add')
-        wv_forecast_mul = wavelet_hw(ts, wavelet='db4', trend='mul', seasonal_type='mul')
+        # Получаем прогнозы базовых моделей
+        forecast_add = model_add.forecast(12)
+        forecast_mul = model_mul.forecast(12)
 
         # Визуализация
         plot_results(
