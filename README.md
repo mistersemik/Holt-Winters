@@ -1,3 +1,10 @@
+![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue?logo=python&logoColor=white)
+![Statsmodels](https://img.shields.io/badge/Statsmodels-0.14.1-8B0000?logo=mathworks&logoColor=white)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.19.0-FF6F00?logo=tensorflow)
+![PyMC](https://img.shields.io/badge/PyMC-5.12.0-FFD43B?logo=python&logoColor=blue)
+![XGBoost](https://img.shields.io/badge/XGBoost-2.1.4-green?logo=xgboost)
+![Keras](https://img.shields.io/badge/Keras-3.10.0-D00000?logo=keras)
+
 # Ансамблевые модели прогнозирования временных рядов (Holt-Winters)
 ![alt text](images/pict1.png)
 
