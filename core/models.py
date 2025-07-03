@@ -200,8 +200,17 @@ def hw_prophet_ensemble(ts, hw_model, holidays_df=None):
     future = model.make_future_dataframe(periods=12, freq='MS')
     prophet_forecast = model.predict(future)['yhat'][-12:].values
 
-    # 6. Комбинация прогнозов
-    return hw_model.forecast(12) + prophet_forecast.values
+    # Комбинированный результат
+    forecast_dates = pd.date_range(
+        start=ts.index[-1] + pd.DateOffset(months=1),
+        periods=12,
+        freq='MS'
+    )
+
+    return pd.Series(
+        hw_model.forecast(12).values + prophet_forecast,
+        index=forecast_dates
+    )
 
 def hw_xgboost_ensemble(ts, hw_model, exog_features=None, forecast_steps=12):
     """
