@@ -548,8 +548,11 @@ def clustered_hw(ts, hw_model, n_clusters=3):
 
         # Простая модель для кластера
         try:
-            forecast = cluster_ts.values[-12:]  # Используем последний год как прогноз
-            forecasts.append(forecast)
+            # Используем последний год каждого ряда в кластере
+            last_years = [year_data[-12:] for year_data in cluster_data]
+            # Усредняем последние годы
+            cluster_forecast = np.mean(last_years, axis=0)
+            forecasts.append(cluster_forecast)
         except:
             forecasts.append(np.array([cluster_ts.mean()] * 12))
 
