@@ -277,7 +277,25 @@ def main():
         print_results(wv_forecast_add, wv_forecast_mul, actual_series, month_names)
 
     except Exception as e:
-        print(f"Ошибка: {str(e)}")
+        print(f"Ошибка при прогнозировании: {str(e)}")
+        # Fallback - наивный прогноз
+        naive_forecast = pd.Series([ts.iloc[-1]] * 12,
+                                 index=pd.date_range(
+                                     start=ts.index[-1] + pd.DateOffset(months=1),
+                                     periods=12,
+                                     freq='MS'
+                                 ))
+        plot_results(
+            ts,
+            naive_forecast,
+            naive_forecast,
+            actual_series,
+            model_type='Naive_Fallback',
+            f1=f1,
+            f2=f2,
+            f3=f3
+        )
+        print_results(naive_forecast, naive_forecast, naive_forecast, actual_series, month_names)
 
 
     # Прогнозирование с XGBoost
