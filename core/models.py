@@ -547,11 +547,9 @@ def wavelet_hw(ts, hw_model, wavelet='db4', forecast_periods=12):
 
     Параметры:
         ts: pd.Series - временной ряд с DatetimeIndex
-        wavelet: str - тип вейвлета ('db4', 'haar' и др.)
-        hw_model: модель ExponentialSmoothing (опционально)
-        trend: str - 'add' или 'mul' тренд
-        seasonal_type: str - 'add' или 'mul' сезонность
-        forecast_periods: int - количество периодов прогноза
+        hw_model: модель ExponentialSmoothing (обязательный параметр)
+        wavelet: str - тип вейвлета ('db4', 'haar' и др., по умолчанию 'db4')
+        forecast_periods: int - количество периодов прогноза (по умолчанию 12)
 
     Возвращает:
         pd.Series - прогноз на указанное число периодов
@@ -570,7 +568,7 @@ def wavelet_hw(ts, hw_model, wavelet='db4', forecast_periods=12):
         raise TypeError("ts должен быть pandas Series")
     if not isinstance(ts.index, pd.DatetimeIndex):
         raise ValueError("Индекс ts должен быть DatetimeIndex")
-    if len(ts) < 24:  # Увеличили минимальное количество данных
+    if len(ts) < 24:  # Минимум 2 года данных
         raise ValueError("Необходим минимум 24 наблюдения (2 полных сезона)")
 
     try:
@@ -588,26 +586,7 @@ def wavelet_hw(ts, hw_model, wavelet='db4', forecast_periods=12):
         forecast_coeffs = []
         for i, coeff in enumerate(coeffs):
             if i == 0:  # Только для аппроксимационной компоненты
-                if hw_model is None:
-                    try:
-                        model = ExponentialSmoothing(
-                            coeff,
-                            trend=trend,
-                            seasonal=seasonal_type if len(coeff) >= 24 else None,
-                            # Отключаем сезонность для коротких рядов
-                            seasonal_periods=12
-                        ).fit()
-                    except ValueError:
-                        # Fallback для случаев, когда не хватает данных для сезонности
-                        model = ExponentialSmoothing(
-                            coeff,
-                            trend=trend,
-                            seasonal=None,
-                            seasonal_periods=12
-                        ).fit()
-                else:
-                    model = hw_model
-                fc = model.forecast(forecast_periods)
+                fc = hw_model.forecast(forecast_periods)
             else:
                 fc = np.zeros(forecast_periods)
             forecast_coeffs.append(fc)

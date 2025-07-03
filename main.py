@@ -295,17 +295,17 @@ def main():
         # Визуализация - только аддитивная и мультипликативная модели
         plot_results(
             ts,
-            wv_forecast_add,
-            wv_forecast_mul,
+            forecast_add,
+            forecast_mul,
             actual_series,
-            model_type='Wavelet_HW',
+            model_type='HW_Wavelet',
             f1=f1,
             f2=f2,
             f3=f3
         )
 
-        # Вывод метрик
-        print_results(wv_forecast_add, wv_forecast_mul, actual_series, month_names)
+        # Вывод метрик (включая wavelet модель)
+        print_results(forecast_add, forecast_mul, wavelet_forecast, actual_series, month_names)
 
     except Exception as e:
         print(f"Ошибка при прогнозировании: {str(e)}")
