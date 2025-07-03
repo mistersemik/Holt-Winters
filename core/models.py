@@ -195,10 +195,10 @@ def hw_prophet_ensemble(ts, hw_model, holidays_df=None):
     prophet_data = residuals.reset_index()
     prophet_data.columns = ['ds', 'y']
 
-    # 5. Обучение и прогноз Prophet
-    prophet_model.fit(prophet_data.dropna())
-    future = prophet_model.make_future_dataframe(periods=12, freq='MS')
-    prophet_forecast = prophet_model.predict(future)['yhat'][-12:]
+    # Обучение и прогноз
+    model.fit(prophet_data.dropna())
+    future = model.make_future_dataframe(periods=12, freq='MS')
+    prophet_forecast = model.predict(future)['yhat'][-12:].values
 
     # 6. Комбинация прогнозов
     return hw_model.forecast(12) + prophet_forecast.values
