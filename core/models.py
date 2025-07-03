@@ -169,12 +169,14 @@ def hw_prophet_ensemble(ts, hw_model, holidays_df=None):
     """
     # 1. Компонента Хольта-Винтерса (используем готовую модель или создаем новую)
     if hw_model is None:
-        hw_model = ExponentialSmoothing(
-            ts,
-            trend=trend,
-            seasonal=seasonal_type,
-            seasonal_periods=12
-        ).fit()
+        raise TypeError(
+            "hw_model является обязательным параметром. "
+            "Пример: hw_model = build_model(data, trend='add', seasonal_type='add')"
+        )
+    if not isinstance(ts, pd.Series):
+        raise TypeError("ts должен быть pandas Series")
+    if not isinstance(ts.index, pd.DatetimeIndex):
+        raise ValueError("Индекс ts должен быть DatetimeIndex")
 
     # 2. Определяем тип сезонности для Prophet
     current_seasonal_type = hw_model.seasonal if hasattr(hw_model, 'seasonal') else seasonal_type
