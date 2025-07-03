@@ -442,7 +442,7 @@ def hw_bayesian_ensemble(ts, hw_model, forecast_steps=12):
 
     return pd.Series(combined_forecast, index=forecast_dates), trace
 
-def clustered_hw(ts, n_clusters=3, hw_model=None, trend='add', seasonal_type='add'):
+def clustered_hw(ts, hw_model, n_clusters=3):
     """
     Упрощённая кластерно-взвешенная модель Хольта-Винтерса
 
