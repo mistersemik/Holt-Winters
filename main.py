@@ -209,10 +209,12 @@ def main():
         cluster_forecast_add, weights_add = clustered_hw(ts, hw_model=hw_add_model)
         cluster_forecast_mul, weights_mul = clustered_hw(ts, hw_model=hw_mul_model)
 
-        # Используем одинаковый прогноз для аддитивной и мультипликативной версий
-        # (можно добавить раздельную логику при необходимости)
-        cluster_forecast_add = cluster_forecast
-        cluster_forecast_mul = cluster_forecast
+        # Выводим результаты
+        print("\nВеса кластеров (аддитивная модель):")
+        print(weights_add)
+
+        print("\nВеса кластеров (мультипликативная модель):")
+        print(weights_mul)
 
         # Визуализация
         plot_results(
