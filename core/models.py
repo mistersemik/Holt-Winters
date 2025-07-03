@@ -308,6 +308,13 @@ def build_hw_tcn_model(hw_model, ts, n_steps=24, forecast_steps=12):
     Возвращает:
         tuple: (combined_forecast, hw_forecast, tcn_forecast, forecast_dates)
     """
+
+    if hw_model is None:
+        raise TypeError(
+            "hw_model является обязательным параметром. "
+            "Пример: hw_model = build_model(data, trend='add', seasonal_type='add')"
+        )
+
     # Вычисляем остатки модели
     residuals = ts - hw_model.fittedvalues
 
