@@ -160,15 +160,12 @@ def hw_prophet_ensemble(ts, hw_model, holidays_df=None):
         pd.Series: Комбинированный прогноз на 12 периодов
 
     Пример использования:
-    # Вариант 1: Классический вызов (создает модель внутри)
-    forecast = hw_prophet_ensemble(ts, holidays_df, seasonal_type='add')
-
-    # Вариант 2: С готовой моделью HW (оптимизированный)
-    hw_model = ExponentialSmoothing(ts, seasonal='add').fit()
-    forecast = hw_prophet_ensemble(ts, hw_model=hw_model, holidays_df)
-
-    # Вариант 3: Без праздников
-    forecast = hw_prophet_ensemble(ts, seasonal_type='mul')
+    >>> hw_model = build_model(ts, trend='add', seasonal_type='add')
+    >>> holidays = pd.DataFrame({
+    ...     'ds': pd.to_datetime(['2023-01-01', '2023-12-31']),
+    ...     'holiday': ['Новый год', 'Канун Нового года']
+    ... })
+    >>> forecast = hw_prophet_ensemble(ts, hw_model, holidays_df=holidays)
     """
     # 1. Компонента Хольта-Винтерса (используем готовую модель или создаем новую)
     if hw_model is None:
