@@ -569,9 +569,9 @@ def clustered_hw(ts, hw_model, n_clusters=3):
         freq='MS'
     )
 
-    return pd.Series(final_forecast, index=forecast_dates), pd.Series(
-        cluster_weights,
-        index=[f'Cluster{i + 1}' for i in range(len(cluster_weights))]
+    return (
+        pd.Series(final_forecast, index=forecast_dates),
+        pd.Series(cluster_weights, index=[f'Cluster_{i}' for i in range(len(cluster_weights))])
     )
 
 def wavelet_hw(ts, wavelet='db4', hw_model=None, trend='add', seasonal_type='add', forecast_periods=12):
