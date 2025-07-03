@@ -541,7 +541,7 @@ def clustered_hw(ts, hw_model, n_clusters=3):
         pd.Series(cluster_weights, index=[f'Cluster_{i}' for i in range(len(cluster_weights))])
     )
 
-def wavelet_hw(ts, wavelet='db4', hw_model=None, trend='add', seasonal_type='add', forecast_periods=12):
+def wavelet_hw(ts, hw_model, wavelet='db4', forecast_periods=12):
     """
     Улучшенная вейвлет-модель Хольта-Винтерса
 
