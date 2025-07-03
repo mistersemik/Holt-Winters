@@ -201,8 +201,9 @@ def main():
 
     # Прогнозирование с кластеризацией
     try:
-        # Упрощенный вызов без HW модели
-        cluster_forecast, weights = clustered_hw(ts, n_clusters=3)
+        # Построение моделей
+        hw_add_model = build_model(ts, trend='add', seasonal_type='add')
+        hw_mul_model = build_model(ts, trend='mul', seasonal_type='mul')
 
         # Вывод информации о кластерах
         print("\nВеса кластеров:")
