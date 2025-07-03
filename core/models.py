@@ -178,8 +178,8 @@ def hw_prophet_ensemble(ts, hw_model, holidays_df=None):
     if not isinstance(ts.index, pd.DatetimeIndex):
         raise ValueError("Индекс ts должен быть DatetimeIndex")
 
-    # 2. Определяем тип сезонности для Prophet
-    current_seasonal_type = hw_model.seasonal if hasattr(hw_model, 'seasonal') else seasonal_type
+    # Определение типа сезонности из модели HW
+    seasonal_mode = 'multiplicative' if getattr(hw_model, 'seasonal', None) == 'mul' else 'additive'
 
     # 3. Настройка Prophet
     prophet_model = Prophet(
