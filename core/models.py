@@ -444,7 +444,10 @@ def hw_bayesian_ensemble(ts, hw_model, forecast_steps=12):
 
 def clustered_hw(ts, hw_model, n_clusters=3):
     """
-    Рабочая кластерно-взвешенная модель Хольта-Винтерса
+    Гибридная модель: Хольт-Винтерс + кластеризация остатков.
+    Работает по схеме:
+        [Holt-Winters] → [Базовый прогноз]
+        [Остатки] → [Кластеризация] → [Коррекция]
 
     Параметры:
         ts: pd.Series - временной ряд с DatetimeIndex
