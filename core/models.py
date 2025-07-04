@@ -500,8 +500,8 @@ def clustered_hw(ts, hw_model, n_clusters=3):
         warn(f"Ошибка кластеризации: {e}. Используем все данные как один кластер")
         clusters = np.zeros(n_years)
 
-    # Прогнозирование для каждого кластера
-    forecasts = []
+    # 5. Прогнозирование поправок по кластерам
+    corrections = []
     cluster_weights = []
 
     for cluster_id in range(n_clusters):
