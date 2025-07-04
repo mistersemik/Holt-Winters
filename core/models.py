@@ -470,8 +470,14 @@ def clustered_hw(ts, hw_model, n_clusters=3):
     # 1. Базовый прогноз HW
     hw_forecast = hw_model.forecast(12)
 
-    # Подготовка данных для кластеризации
-    X = padded_values.reshape(n_years, 12)
+    # 2. Вычисление остатков
+    residuals = ts - hw_model.fittedvalues
+    residuals = residuals.dropna()
+
+    # 3. Подготовка остатков для кластеризации (группировка по годам)
+    resid_values = residuals.values
+    n_years = len(resid_values) // 12
+    X = resid_values[:n_years * 12].reshape(n_years, 12)
 
     # Автокоррекция числа кластеров
     n_clusters = min(n_clusters, n_years)
