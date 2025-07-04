@@ -288,16 +288,7 @@ def main():
         wavelet_forecast = wavelet_hw(ts, hw_model=model_add)
 
         # Визуализация - только аддитивная и мультипликативная модели
-        plot_results(
-            ts,
-            forecast_add,
-            forecast_mul,
-            actual_series,
-            model_type='HW_Wavelet',
-            f1=f1,
-            f2=f2,
-            f3=f3
-        )
+        plot_results(ts, forecast_add, forecast_mul, actual_series, model_type='HW_Wavelet', f1=f1, f2=f2, f3=f3)
 
         # Вывод метрик (включая wavelet модель)
         print_results(forecast_add, forecast_mul, wavelet_forecast, actual_series, month_names)
