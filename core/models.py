@@ -467,13 +467,8 @@ def clustered_hw(ts, hw_model, n_clusters=3):
     if len(ts) < 24:
         raise ValueError("Нужно минимум 24 периода данных")
 
-    # Дополняем данные до полных лет
-    if remainder > 0:
-        last_year_mean = np.mean(ts_values[-remainder:])
-        padded_values = np.concatenate([ts_values, np.full(12 - remainder, last_year_mean)])
-        n_years += 1
-    else:
-        padded_values = ts_values
+    # 1. Базовый прогноз HW
+    hw_forecast = hw_model.forecast(12)
 
     # Подготовка данных для кластеризации
     X = padded_values.reshape(n_years, 12)
