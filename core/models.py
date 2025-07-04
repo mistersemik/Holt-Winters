@@ -457,18 +457,15 @@ def clustered_hw(ts, hw_model, n_clusters=3):
     Возвращает:
         tuple: (forecast, cluster_weights) - прогноз и веса кластеров
     """
-    # Проверки входных данных
-    if not isinstance(ts, pd.Series):
-        raise TypeError("ts должен быть pandas Series")
-    if not isinstance(ts.index, pd.DatetimeIndex):
-        raise ValueError("Индекс ts должен быть DatetimeIndex")
-    if len(ts) < 24:  # Минимум 2 года данных для кластеризации
-        raise ValueError("Необходимо минимум 24 периода данных")
 
-    # Получаем данные из временного ряда
-    ts_values = ts.values
-    n_years = len(ts_values) // 12
-    remainder = len(ts_values) % 12
+    if hw_model is None:
+        raise ValueError(
+            "hw_model является обязательным параметром. "
+            "Пример: hw_model = build_model(data, trend='add', seasonal_type='add')"
+        )
+
+    if len(ts) < 24:
+        raise ValueError("Нужно минимум 24 периода данных")
 
     # Дополняем данные до полных лет
     if remainder > 0:
