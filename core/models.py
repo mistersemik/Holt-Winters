@@ -450,12 +450,12 @@ def clustered_hw(ts, hw_model, n_clusters=3):
         [Остатки] → [Кластеризация] → [Коррекция]
 
     Параметры:
-        ts: pd.Series - временной ряд с DatetimeIndex
+        ts: pd.Series - временной ряд
         hw_model: обученная модель ExponentialSmoothing
-        n_clusters: int - количество кластеров (по умолчанию 3)
+        n_clusters: int - число кластеров для остатков
 
     Возвращает:
-        tuple: (forecast, cluster_weights) - прогноз и веса кластеров
+        tuple: (forecast, cluster_weights)
     """
 
     if hw_model is None:
@@ -481,12 +481,9 @@ def clustered_hw(ts, hw_model, n_clusters=3):
 
     # Автокоррекция числа кластеров
     n_clusters = min(n_clusters, n_years)
-    if n_clusters < 1:
-        n_clusters = 1
 
-    # Кластеризация временных рядов
+    # 4. Кластеризация остатков
     try:
-        # Нормализация данных для кластеризации
         scaler = MinMaxScaler()
         X_scaled = scaler.fit_transform(X.T).T
 
@@ -497,7 +494,7 @@ def clustered_hw(ts, hw_model, n_clusters=3):
         )
         clusters = km.fit_predict(X_scaled.reshape(n_years, 12, 1))
     except Exception as e:
-        warn(f"Ошибка кластеризации: {e}. Используем все данные как один кластер")
+        warn(f"Ошибка кластеризации: {e}. Используем один кластер.")
         clusters = np.zeros(n_years)
 
     # 5. Прогнозирование поправок по кластерам
@@ -505,43 +502,31 @@ def clustered_hw(ts, hw_model, n_clusters=3):
     cluster_weights = []
 
     for cluster_id in range(n_clusters):
-        cluster_mask = (clusters == cluster_id)
-        if not any(cluster_mask):
+        if not any(clusters == cluster_id):
             continue
 
-        # Получаем данные кластера
-        cluster_data = X[cluster_mask]
-        cluster_weight = cluster_mask.sum() / n_years
-        cluster_weights.append(cluster_weight)
+        # Данные кластера (последние остатки)
+        cluster_data = X[clusters == cluster_id][:, -6:]  # Берем последние 6 месяцев
 
-        # Строим модель для кластера
-        try:
-            # Используем последний год каждого ряда в кластере
-            last_years = [year_data[-12:] for year_data in cluster_data]
-            # Усредняем последние годы
-            cluster_forecast = np.mean(last_years, axis=0)
-            forecasts.append(cluster_forecast)
-        except:
-            # Fallback: используем среднее по кластеру
-            forecasts.append(np.array([np.mean(cluster_data)] * 12))
+        # Средняя поправка по кластеру
+        correction = np.mean(cluster_data, axis=0)[-3:].mean()  # Усредняем последние 3 месяца
+        corrections.append(correction)
 
-    # Взвешенное объединение прогнозов
-    if not forecasts:
-        # Если кластеризация не дала результатов
-        final_forecast = np.array([ts_values.mean()] * 12)
+        # Вес = доля кластера
+        cluster_weights.append(np.sum(clusters == cluster_id) / n_years)
+
+    # 6. Взвешенная поправка
+    if not corrections:
+        final_correction = 0
         cluster_weights = [1.0]
     else:
-        final_forecast = np.average(forecasts, axis=0, weights=cluster_weights)
+        final_correction = np.average(corrections, weights=cluster_weights)
 
-    # Формируем результат
-    forecast_dates = pd.date_range(
-        start=ts.index[-1] + pd.DateOffset(months=1),
-        periods=12,
-        freq='MS'
-    )
+    # 7. Итоговый прогноз
+    forecast = hw_forecast + final_correction
 
     return (
-        pd.Series(final_forecast, index=forecast_dates),
+        forecast,
         pd.Series(cluster_weights, index=[f'Cluster_{i}' for i in range(len(cluster_weights))])
     )
 
