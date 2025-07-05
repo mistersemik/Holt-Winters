@@ -292,7 +292,7 @@ def main():
         plot_results(ts, forecast_add, forecast_mul, actual_series, model_type='HW_Wavelet', f1=f1, f2=f2, f3=f3)
 
         # Вывод метрик (включая wavelet модель)
-        print_results(forecast_add, forecast_mul, wavelet_forecast, actual_series, month_names)
+        print_results(wavelet_forecast_add, wavelet_forecast_mul, actual_series, month_names)
 
     except Exception as e:
         print(f"Ошибка при прогнозировании: {str(e)}")
