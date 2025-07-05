@@ -603,3 +603,23 @@ def wavelet_hw(ts, hw_model, wavelet='db4', forecast_periods=12):
             periods=forecast_periods,
             freq='MS'
         ))
+
+def naive_forecast(ts: pd.Series, periods: int = 12) -> pd.Series:
+    """
+    Наивный прогноз (последнее известное значение)
+
+    Параметры:
+        ts: Исходный временной ряд
+        periods: Количество прогнозируемых периодов
+
+    Возвращает:
+        pd.Series с прогнозом и DatetimeIndex
+    """
+    return pd.Series(
+        [ts.iloc[-1]] * periods,
+        index=pd.date_range(
+            start=ts.index[-1] + pd.DateOffset(months=1),
+            periods=periods,
+            freq='MS'
+        )
+    )
