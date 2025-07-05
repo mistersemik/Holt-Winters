@@ -111,7 +111,7 @@ def main():
     plot_results(ts, arima_forecast_add, arima_forecast_mul, actual_series, model_type='HW_ARIMA', f1=f1, f2=f2, f3=f3)
     print_results(arima_forecast_add, arima_forecast_mul, actual_series, month_names)
 
-    # Добавлен вызов HW_LSTMM
+    # Добавлен вызов HW_LSTM
     print('\nРезультат прогнозирования Хольта-Винтерса & LSTM')
     lstm_forecast_add = HW_LSTM(ts, model_add)
     lstm_forecast_mul = HW_LSTM(ts, model_mul)
@@ -161,7 +161,6 @@ def main():
 
     print('\nРезультат прогнозирования Хольта-Винтерса + TCN')
 
-    # 5. Визуализация
     plot_results(
         ts,
         forecast_series_add,
@@ -231,6 +230,9 @@ def main():
 
     except Exception as e:
         print(f"Ошибка в байесовском ансамбле: {str(e)}")
+        naive_unit = naive_forecast(ts, periods=12)
+        plot_results(ts, naive_unit, naive_unit, actual_series, model_type='Naive_Fallback', f1=f1, f2=f2, f3=f3)
+        print_results(naive_unit, naive_unit, actual_series, month_names)
 
 
     # Прогнозирование с кластеризацией
@@ -238,14 +240,12 @@ def main():
         cluster_forecast_add, weights_add = clustered_hw(ts, hw_model=model_add)
         cluster_forecast_mul, weights_mul = clustered_hw(ts, hw_model=model_mul)
 
-        # Выводим результаты
         print("\nВеса кластеров (аддитивная модель):")
         print(weights_add)
 
         print("\nВеса кластеров (мультипликативная модель):")
         print(weights_mul)
 
-        # Визуализация
         plot_results(
             ts,
             cluster_forecast_add,
@@ -257,66 +257,29 @@ def main():
             f3=f3
         )
 
-        # Вывод метрик
         print_results(cluster_forecast_add, cluster_forecast_mul, actual_series, month_names)
 
     except Exception as e:
         print(f"Ошибка при прогнозировании: {str(e)}")
-        # Fallback - наивный прогноз
-        naive_forecast = pd.Series([ts.iloc[-1]] * 12,
-                                   index=pd.date_range(
-                                       start=ts.index[-1] + pd.DateOffset(months=1),
-                                       periods=12,
-                                       freq='MS'
-                                   ))
-        plot_results(
-            ts,
-            naive_forecast,
-            naive_forecast,
-            actual_series,
-            model_type='Naive_Fallback',
-            f1=f1,
-            f2=f2,
-            f3=f3
-        )
-        print_results(naive_forecast, naive_forecast, actual_series, month_names)
+        naive_unit = naive_forecast(ts, periods=12)
+        plot_results(ts, naive_unit, naive_unit, actual_series, model_type='Naive_Fallback', f1=f1, f2=f2, f3=f3)
+        print_results(naive_unit, naive_unit, actual_series, month_names)
 
 
     try:
-        # Получаем прогнозы базовых моделей
-        forecast_add = model_add.forecast(12)
-        forecast_mul = model_mul.forecast(12)
-
-        # Получаем вейвлет-прогноз (используем аддитивную модель как базовую)
+        # Получаем вейвлет-прогноз
         wavelet_forecast_add = wavelet_hw(ts, hw_model=model_add)
         wavelet_forecast_mul = wavelet_hw(ts, hw_model=model_mul)
 
-        # Визуализация - только аддитивная и мультипликативная модели
         plot_results(ts, forecast_add, forecast_mul, actual_series, model_type='HW_Wavelet', f1=f1, f2=f2, f3=f3)
 
-        # Вывод метрик (включая wavelet модель)
         print_results(wavelet_forecast_add, wavelet_forecast_mul, actual_series, month_names)
 
     except Exception as e:
         print(f"Ошибка при прогнозировании: {str(e)}")
-        # # Fallback - наивный прогноз
-        # naive_forecast = pd.Series([ts.iloc[-1]] * 12,
-        #                          index=pd.date_range(
-        #                              start=ts.index[-1] + pd.DateOffset(months=1),
-        #                              periods=12,
-        #                              freq='MS'
-        #                          ))
-        # plot_results(
-        #     ts,
-        #     naive_forecast,
-        #     naive_forecast,
-        #     actual_series,
-        #     model_type='Naive_Fallback',
-        #     f1=f1,
-        #     f2=f2,
-        #     f3=f3
-        # )
-        # print_results(naive_forecast, naive_forecast, naive_forecast, actual_series, month_names)
+        naive_unit = naive_forecast(ts, periods=12)
+        plot_results(ts, naive_unit, naive_unit, actual_series, model_type='Naive_Fallback', f1=f1, f2=f2, f3=f3)
+        print_results(naive_unit, naive_unit, actual_series, month_names)
 
 if __name__ == "__main__":
     main()
