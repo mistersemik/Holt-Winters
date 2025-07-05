@@ -205,6 +205,9 @@ def main():
 
     except Exception as e:
         print(f"Ошибка в XGBoost ансамбле: {str(e)}")
+        naive_unit = naive_forecast(ts, periods=12)
+        plot_results(ts, naive_unit, naive_unit, actual_series, model_type='Naive_Fallback', f1=f1, f2=f2, f3=f3)
+        print_results(naive_unit, naive_unit, actual_series, month_names)
 
 
     # Байесовский ансамбль
