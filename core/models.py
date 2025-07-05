@@ -13,7 +13,7 @@ from tslearn.clustering import TimeSeriesKMeans
 from warnings import warn
 import pywt
 
-def build_model(data, trend='add',seasonal_type='add', seasonal_periods=12):
+def build_model(data: pd.Series, trend='add',seasonal_type='add', seasonal_periods=12):
     """
     Строит и обучает модель Хольта-Винтерса для временных рядов.
 
@@ -43,7 +43,7 @@ def build_model(data, trend='add',seasonal_type='add', seasonal_periods=12):
     ).fit()
     return model
 
-def HW_ARMIMA(ts, hw_model):
+def HW_ARMIMA(ts: pd.Series, hw_model: ExponentialSmoothing):
     """
     Комбинированная модель Хольта-Винтерса и ARIMA для остатков.
     Использует преимущества обеих моделей: HW для основной компоненты и ARIMA для остатков.
@@ -88,7 +88,7 @@ def HW_ARMIMA(ts, hw_model):
 
     return pd.Series(hw_forecast.values + arima_forecast, index=forecast_dates) # Комбинируем прогнозы
 
-def HW_LSTM(ts, hw_model, n_steps=3, n_epochs=50, n_neurons=50):
+def HW_LSTM(ts: pd.Series, hw_model: ExponentialSmoothing, n_steps=3, n_epochs=50, n_neurons=50):
     """
     Комбинированная модель Хольта-Винтерса + LSTM.
 
@@ -151,7 +151,7 @@ def HW_LSTM(ts, hw_model, n_steps=3, n_epochs=50, n_neurons=50):
 
     return pd.Series(hw_forecast.values + lstm_forecast, index=forecast_dates)
 
-def hw_prophet_ensemble(ts, hw_model, holidays_df=None):
+def hw_prophet_ensemble(ts: pd.Series, hw_model: ExponentialSmoothing, holidays_df=None):
     """
     Комбинированная модель Хольта-Винтерса и Prophet для временных рядов
 
@@ -221,7 +221,7 @@ def hw_prophet_ensemble(ts, hw_model, holidays_df=None):
         index=forecast_dates
     )
 
-def hw_xgboost_ensemble(ts, hw_model, exog_features=None, forecast_steps=12):
+def hw_xgboost_ensemble(ts: pd.Series, hw_model: ExponentialSmoothing, exog_features=None, forecast_steps=12):
     """
     Комбинированная модель Хольта-Винтерса + XGBoost для остатков с внешними признаками
 
@@ -298,7 +298,7 @@ def hw_xgboost_ensemble(ts, hw_model, exog_features=None, forecast_steps=12):
 
     return pd.Series(combined_forecast, index=forecast_dates)
 
-def build_hw_tcn_model(hw_model, ts, n_steps=24, forecast_steps=12):
+def build_hw_tcn_model(hw_model: ExponentialSmoothing, ts: pd.Series, n_steps=24, forecast_steps=12):
     """
     Создает и возвращает комбинированный прогноз HW-TCN
 
@@ -370,7 +370,7 @@ def build_hw_tcn_model(hw_model, ts, n_steps=24, forecast_steps=12):
 
     return combined_forecast, hw_forecast, tcn_forecast, forecast_dates
 
-def hw_bayesian_ensemble(ts, hw_model, forecast_steps=12):
+def hw_bayesian_ensemble(ts: pd.Series, hw_model: ExponentialSmoothing, forecast_steps=12):
     """
     Байесовский ансамбль с моделью Хольта-Винтерса
 
@@ -442,7 +442,7 @@ def hw_bayesian_ensemble(ts, hw_model, forecast_steps=12):
 
     return pd.Series(combined_forecast, index=forecast_dates), trace
 
-def clustered_hw(ts, hw_model, n_clusters=3):
+def clustered_hw(ts: pd.Series, hw_model: ExponentialSmoothing, n_clusters=3):
     """
     Гибридная модель: Хольт-Винтерс + кластеризация остатков.
     Работает по схеме:
@@ -530,7 +530,7 @@ def clustered_hw(ts, hw_model, n_clusters=3):
         pd.Series(cluster_weights, index=[f'Cluster_{i}' for i in range(len(cluster_weights))])
     )
 
-def wavelet_hw(ts, hw_model, wavelet='db4', forecast_periods=12):
+def wavelet_hw(ts: pd.Series, hw_model: ExponentialSmoothing, wavelet='db4', forecast_periods=12):
     """
     Улучшенная вейвлет-модель Хольта-Винтерса
 
