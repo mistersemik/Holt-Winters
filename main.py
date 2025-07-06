@@ -18,6 +18,14 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
 warnings.simplefilter('ignore', ConvergenceWarning)
 
+import yaml
+
+def load_config():
+    with open("config.yaml", "r") as f:
+        return yaml.safe_load(f)
+
+config = load_config()
+
 def print_results(forecast_add, forecast_mul, actual, month_names):
     """
         Формирует и выводит детализированный отчёт, включающий:
