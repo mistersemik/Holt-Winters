@@ -81,9 +81,9 @@ def main():
     """Основной поток выполнения"""
     # Подготовка данных
     ts, actual_series, year_labels = prepare_data(
-        historical_data=historical_data,
-        actual_data=actual_data,
-        year=year
+        historical_data=config["data"]["historical"],
+        actual_data=config["data"]["actual"],
+        year=config["data"]["year"]
     )
 
     # Получаем метки годов для подписей
