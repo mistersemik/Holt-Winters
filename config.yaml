@@ -1,0 +1,54 @@
+# Основные параметры данных
+data:
+  historical: "data/historical.csv"  # Путь к историческим данным
+  actual: "data/actual.csv"         # Путь к актуальным данным для проверки
+  holidays: "data/holidays.csv"     # Календарь праздников (опционально)
+  exog_features: "data/exog_features.csv"  # Внешние признаки (опционально)
+  year: '2025-01'                        # Год для анализа
+
+# Общие параметры моделей
+models:
+  base:
+    seasonal_periods: 12            # Количество сезонных периодов (12 для месячных данных)
+    trend_types: ['add', 'mul']     # Типы трендов для тестирования
+
+  # Параметры HW_LSTM
+  lstm:
+    n_steps: 3                      # Количество временных шагов для LSTM
+    n_epochs: 50                    # Количество эпох обучения
+    n_neurons: 50                   # Количество нейронов в слое LSTM
+
+  # Параметры HW_ARMIMA
+  arima:
+    seasonal: false                 # Использовать сезонность в ARIMA
+    suppress_warnings: true         # Подавлять предупреждения ARIMA
+
+  # Параметры Prophet
+  prophet:
+    yearly_seasonality: true        # Годовая сезонность
+    weekly_seasonality: false       # Недельная сезонность
+    daily_seasonality: false        # Дневная сезонность
+
+  # Параметры TCN
+  tcn:
+    n_steps: 24                     # Размер окна для TCN
+    forecast_steps: 12              # Шаги прогноза
+    filters: 64                     # Количество фильтров в Conv1D
+    kernel_size: 3                  # Размер ядра свертки
+
+  # Параметры кластеризации
+  clustering:
+    n_clusters: 3                   # Число кластеров для остатков
+    metric: "dtw"                   # Метрика для кластеризации
+
+  # Параметры вейвлетов
+  wavelet:
+    type: "db4"                     # Тип вейвлета
+    level: 3                        # Уровень декомпозиции
+
+# Настройки вывода и логирования
+logging:
+  disable_cmdstanpy: true           # Отключить логи cmdstanpy
+  disable_prophet: true             # Отключить логи Prophet
+  disable_pystan: true              # Отключить логи PyStan
+  ignore_warnings: true             # Игнорировать предупреждения
