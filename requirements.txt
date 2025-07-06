@@ -59,6 +59,7 @@ pytensor==2.19.0
 python-dateutil==2.9.0.post0
 pytz==2025.2
 PyWavelets==1.6.0
+PyYAML==6.0.2
 requests==2.32.4
 rich==14.0.0
 scikit-learn==1.6.1
