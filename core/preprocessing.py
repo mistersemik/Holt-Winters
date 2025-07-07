@@ -48,8 +48,9 @@ def prepare_data(historical_data, actual_data, year):
     historical_df = pd.read_csv(historical_data, parse_dates=['date'])
     actual_df = pd.read_csv(actual_data, parse_dates=['date'])
 
-    historical_dates = pd.date_range(start=year, periods=len(historical_data), freq='MS')
-    ts = pd.Series(np.array(historical_data), index=historical_dates)
+    # Создание временных рядов
+    ts = historical_df.set_index('date')['value']
+    actual_series = actual_df.set_index('date')['value']
 
     num_years = len(historical_data) // 12
     last_year_start = pd.to_datetime(year) + pd.DateOffset(years=num_years - 1)
