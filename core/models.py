@@ -223,80 +223,100 @@ def hw_prophet_ensemble(ts: pd.Series, hw_model: ExponentialSmoothing, holidays_
 
 def hw_xgboost_ensemble(ts: pd.Series, hw_model: ExponentialSmoothing, exog_features=None, forecast_steps=12):
     """
-    Комбинированная модель Хольта-Винтерса + XGBoost для остатков с внешними признаками
+    Улучшенная версия комбинированной модели HW + XGBoost
 
     Параметры:
-        ts: pd.Series - временной ряд для прогнозирования
-        hw_model: обученная модель ExponentialSmoothing
+        ts: pd.Series - временной ряд с DatetimeIndex
+        hw_model: обученная модель Хольта-Винтерса
         exog_features: pd.DataFrame - внешние признаки (по умолчанию None)
-        forecast_steps: int - количество шагов прогноза (по умолчанию 12)
+        forecast_steps: int - количество периодов прогноза
 
     Возвращает:
         pd.Series - комбинированный прогноз
     """
-    if hw_model is None:
-        raise TypeError(
-            "hw_model является обязательным параметром. "
-            "Пример: hw_model = build_model(data, trend='add', seasonal_type='add')"
+    try:
+        # 1. Проверка входных данных
+        if hw_model is None:
+            raise ValueError("hw_model не может быть None")
+
+        if len(ts) < 24:  # Минимум 2 года данных
+            raise ValueError("Недостаточно данных для обучения (минимум 24 периода)")
+
+        # 2. Прогноз HW
+        hw_forecast = hw_model.forecast(forecast_steps)
+
+        # 3. Вычисление остатков
+        residuals = ts - hw_model.fittedvalues
+        residuals = residuals.dropna()
+
+        # 4. Подготовка признаков
+        if exog_features is None:
+            # Создаем лаговые признаки с защитой от недостатка данных
+            min_required_length = 4 + forecast_steps  # 3 лага + прогнозируемые периоды
+            if len(residuals) < min_required_length:
+                raise ValueError(f"Недостаточно данных для лагов. Нужно {min_required_length}, есть {len(residuals)}")
+
+            lag_data = pd.DataFrame({
+                'lag1': residuals.shift(1),
+                'lag2': residuals.shift(2),
+                'lag3': residuals.shift(3),
+                'target': residuals
+            }).dropna()
+
+            # Разделение на обучающую и тестовую выборки
+            X = lag_data[['lag1', 'lag2', 'lag3']]
+            y = lag_data['target']
+
+            split_point = len(X) - forecast_steps
+            if split_point <= 0:
+                raise ValueError("Недостаточно данных для разделения на train/test")
+
+            X_train, X_test = X.iloc[:split_point], X.iloc[split_point:]
+            y_train = y.iloc[:split_point]
+
+        else:
+            # Проверка внешних признаков
+            if not isinstance(exog_features, pd.DataFrame):
+                raise TypeError("exog_features должен быть DataFrame")
+
+            if len(exog_features) != len(ts):
+                exog_features = exog_features.reindex(ts.index)
+
+            X_train = exog_features.iloc[:-forecast_steps]
+            y_train = residuals.iloc[:-forecast_steps]
+            X_test = exog_features.iloc[-forecast_steps:]
+
+        # 5. Обучение модели
+        from xgboost import XGBRegressor
+        model = XGBRegressor(
+            objective='reg:squarederror',
+            n_estimators=150,
+            max_depth=5,
+            learning_rate=0.1,
+            random_state=42
         )
 
-    # 1. Прогноз HW
-    hw_forecast = hw_model.forecast(forecast_steps)
-
-    # 2. Остатки модели
-    residuals = ts - hw_model.fittedvalues
-    residuals = residuals.dropna()
-
-    # 3. Если нет внешних признаков, используем лаговые признаки
-    if exog_features is None:
-        # Создаем лаговые признаки из остатков
-        lag_features = pd.DataFrame({
-            'lag1': residuals.shift(1),
-            'lag2': residuals.shift(2),
-            'lag3': residuals.shift(3)
-        }).dropna()
-
-        X_train = lag_features.iloc[:-forecast_steps]
-        y_train = residuals[3:-forecast_steps]  # соответствие лагам
-        X_test = lag_features.iloc[-forecast_steps:]
-    else:
-        # Проверка совпадения индексов
-        if not exog_features.index.equals(ts.index):
-            raise ValueError("Индексы exog_features должны совпадать с индексами ts")
-
-        X_train = exog_features.iloc[:-forecast_steps]
-        y_train = residuals.iloc[:-forecast_steps]
-        X_test = exog_features.iloc[-forecast_steps:]
-
-    # 4. Обучение XGBoost
-    from xgboost import XGBRegressor
-    from sklearn.feature_selection import RFE
-
-    model = XGBRegressor(objective='reg:squarederror', n_estimators=100)
-
-    # Автоматический выбор признаков
-    if len(X_train.columns) > 1:
-        selector = RFE(model, n_features_to_select=min(3, len(X_train.columns)))
-        selector.fit(X_train, y_train)
-        xgb_model = selector.estimator_
-    else:
         model.fit(X_train, y_train)
-        xgb_model = model
 
-    # 5. Прогнозирование остатков
-    resid_forecast = xgb_model.predict(X_test)
+        # 6. Прогнозирование остатков
+        resid_forecast = model.predict(X_test)
 
-    # 6. Комбинированный прогноз
-    combined_forecast = hw_forecast.values + resid_forecast
+        # 7. Комбинирование прогнозов
+        combined_forecast = hw_forecast.values + resid_forecast
 
-    # 7. Формирование результата
-    forecast_dates = pd.date_range(
-        start=ts.index[-1] + pd.DateOffset(months=1),
-        periods=forecast_steps,
-        freq='MS'
-    )
+        # 8. Формирование результата
+        forecast_dates = pd.date_range(
+            start=ts.index[-1] + pd.DateOffset(months=1),
+            periods=forecast_steps,
+            freq='MS'
+        )
 
-    return pd.Series(combined_forecast, index=forecast_dates)
+        return pd.Series(combined_forecast, index=forecast_dates)
+
+    except Exception as e:
+        print(f"\nОшибка в hw_xgboost_ensemble: {str(e)}")
+        print("Возвращаем прогноз только по модели Хольта-Винтерса")
+        return hw_model.forecast(forecast_steps)
 
 def build_hw_tcn_model(hw_model: ExponentialSmoothing, ts: pd.Series, n_steps=24, forecast_steps=12):
     """

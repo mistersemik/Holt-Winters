@@ -26,23 +26,30 @@
 ## Действующая структура проекта
 ```
 /Holt-Winters
-│   main.py              # Основной скрипт
-│   config.py            # Конфигурация (исходные данные)
-│   README.md            # Пользовательское описание
+│   main.py              # Основной CLI-скрипт
+│   config.yaml          # Основной конфиг (заменяет config.py)
+│   README.md            # Документация
 │   CHANGELOG.md         # Записи обновлений
+│   requirements.txt     # Зависимости
 │
-├───core/                # Вычислительное ядро
-│   │   models.py        # Функции моделей
-│   │   calculations.py  # Вычисления и метрики
+├───core/
+│   │   models.py        # Модели (HW_LSTM, HW_ARMIMA и др.)
+│   │   calculations.py  # Метрики (MAE, RMSE)
 │   │   preprocessing.py # Подготовка данных
 │
 ├───utils/
-│    │   visualization.py # Визуализация
-│  
-└───data/
-     │     holidays.csv   # Праздничные дни (РФ)
-     │   exog_features.csv # Опциональные внешние признаки
- 
+│   │   visualization.py # Визуализация
+│   │   config_loader.py # Загрузчик YAML + fallback на config.py
+│
+├───data/
+│   │   historical.csv   # Основные исторические данные
+│   │   actual.csv       # Актуальные данные для проверки
+│   │   holidays.csv     # Праздники РФ
+│   │   exog_features.csv # Внешние признаки (опционально)
+│
+└───configs/             # Доп. конфиги для экспериментов
+    │   prod.yaml        # Продакшен-настройки
+    │   dev.yaml         # Настройки для разработки
 ```
 
 ## Архитектурный подход
@@ -137,3 +144,18 @@
 2. Установите зависимости
     ```bash
    pip install -r requirements.txt
+
+### Основные зависимости
+![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue?logo=python)
+![Pandas 2.0.3](https://img.shields.io/badge/Pandas-2.0.3-150458?logo=pandas)
+![NumPy 1.26.4](https://img.shields.io/badge/NumPy-1.26.4-013243?logo=numpy)
+
+### Машинное обучение
+![TensorFlow 2.19.0](https://img.shields.io/badge/TensorFlow-2.19.0-FF6F00?logo=tensorflow)
+![XGBoost 2.1.4](https://img.shields.io/badge/XGBoost-2.1.4-green?logo=xgboost)
+![Keras 3.10.0](https://img.shields.io/badge/Keras-3.10.0-D00000?logo=keras)
+
+### Статистика и прогнозирование
+![Statsmodels 0.14.1](https://img.shields.io/badge/Statsmodels-0.14.1-8B0000?logo=mathworks)
+![Prophet 1.1.7](https://img.shields.io/badge/Prophet-1.1.7-black?logo=facebook)
+![pmdarima 2.0.4](https://img.shields.io/badge/pmdarima-2.0.4-blueviolet)

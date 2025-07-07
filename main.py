@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 
-from config import historical_data, actual_data, year
 from core.preprocessing import prepare_data
 from utils.visualization import plot_results
 from core.models import build_model, HW_ARMIMA, HW_LSTM, hw_prophet_ensemble, build_hw_tcn_model, hw_xgboost_ensemble, \
@@ -18,11 +17,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
 warnings.simplefilter('ignore', ConvergenceWarning)
 
-import yaml
-
-def load_config():
-    with open("config.yaml", "r") as f:
-        return yaml.safe_load(f)
+from utils.config_loader import load_config
 
 config = load_config()
 
@@ -87,7 +82,7 @@ def print_results(forecast_add, forecast_mul, actual, month_names):
 
 def main():
     """Основной поток выполнения"""
-    # Подготовка данных
+
     ts, actual_series, year_labels = prepare_data(
         historical_data=config["data"]["historical"],
         actual_data=config["data"]["actual"],
