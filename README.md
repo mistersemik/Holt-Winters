@@ -5,7 +5,18 @@
 ![XGBoost](https://img.shields.io/badge/XGBoost-2.1.4-green?logo=xgboost)
 ![Keras](https://img.shields.io/badge/Keras-3.10.0-D00000?logo=keras)
 
-# Ансамблевые модели прогнозирования временных рядов (Holt-Winters)
+# Гибридные модели прогнозирования временных рядов (Holt-Winters)
+### 1. Остаточное обучение (Residual Forecasting)  
+- HW + ARIMA
+- HW + TCN
+- HW + Prophet
+### 2. Ансамбли
+- clustered_hw
+- hw_bayesian_ensemble 
+### 3. Гибридные методы
+- Вейвлет-разложение ряда + прогноз HW для аппроксимационной компоненты
+### 4. Наивный метод
+
 ![alt text](images/pict1.png)
 
 ## Научный контекст
