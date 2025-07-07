@@ -44,10 +44,9 @@ def prepare_data(historical_data, actual_data, year):
     >>> print(labels)
     {'f1': '2020', 'f2': '2021', 'f3': '2022'}
     """
-    if len(historical_data) % 12 != 0:
-        raise ValueError("historical_data должен содержать данные ровно за целые годы (кратно 12)")
-    if len(actual_data) != 12:
-        raise ValueError("actual_data должен содержать ровно 12 значений (данные за 1 год)")
+    # Загрузка данных из CSV
+    historical_df = pd.read_csv(historical_data, parse_dates=['date'])
+    actual_df = pd.read_csv(actual_data, parse_dates=['date'])
 
     historical_dates = pd.date_range(start=year, periods=len(historical_data), freq='MS')
     ts = pd.Series(np.array(historical_data), index=historical_dates)
