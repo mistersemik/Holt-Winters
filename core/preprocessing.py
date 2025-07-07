@@ -52,15 +52,12 @@ def prepare_data(historical_data, actual_data, year):
     ts = historical_df.set_index('date')['value']
     actual_series = actual_df.set_index('date')['value']
 
-    num_years = len(historical_data) // 12
-    last_year_start = pd.to_datetime(year) + pd.DateOffset(years=num_years - 1)
-
-    actual_dates = pd.date_range(
-        start=last_year_start + pd.DateOffset(years=1),
-        periods=12,
-        freq='MS'
-    )
-    actual_series = pd.Series(np.array(actual_data), index=actual_dates)
+    # Генерация меток годов
+    year_labels = {
+        'f1': f"{pd.to_datetime(year).year - 2} год",
+        'f2': f"{pd.to_datetime(year).year - 1} год",
+        'f3': f"{pd.to_datetime(year).year} год"
+    }
 
     return ts, actual_series, {
         'f1': year[:4],
