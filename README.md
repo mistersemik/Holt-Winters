@@ -5,7 +5,7 @@
 ![XGBoost](https://img.shields.io/badge/XGBoost-2.1.4-green?logo=xgboost)
 ![Keras](https://img.shields.io/badge/Keras-3.10.0-D00000?logo=keras)
 
-# Ансамблевые модели прогнозирования временных рядов (Holt-Winters)
+# Комбинированные модели прогнозирования временных рядов (Holt-Winters)
 ![alt text](images/pict1.png)
 
 ## Научный контекст
