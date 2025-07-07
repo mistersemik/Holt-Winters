@@ -39,7 +39,7 @@
 │
 ├───utils/
 │   │   visualization.py # Визуализация
-│   │   config_loader.py # Загрузчик YAML + fallback на config.py
+│   │   config_loader.py # Загрузчик YAML
 │
 ├───data/
 │   │   historical.csv   # Основные исторические данные
