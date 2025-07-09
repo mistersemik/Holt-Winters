@@ -3,10 +3,10 @@ import pandas as pd
 
 from core.preprocessing import prepare_data
 from utils.visualization import plot_results
-from core.models import build_model, HW_ARMIMA, HW_LSTM, hw_prophet_ensemble, build_hw_tcn_model, hw_xgboost_ensemble, \
+from core.models import HW_ARMIMA, HW_LSTM, hw_prophet_ensemble, build_hw_tcn_model, hw_xgboost_ensemble, \
 hw_bayesian_ensemble, clustered_hw, wavelet_hw, naive_forecast
 from core.calculations import calculate_metrics
-
+from statsmodels.tsa.holtwinters import ExponentialSmoothing
 import logging
 logging.getLogger('cmdstanpy').disabled = True
 logging.getLogger('prophet').disabled = True
@@ -96,9 +96,23 @@ def main():
 
     month_names = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"]
 
-    # Остальной код остается прежним, но используем actual_series вместо actual_data
-    model_add = build_model(ts, trend='add', seasonal_type='add')
-    model_mul = build_model(ts, trend='mul', seasonal_type='mul')
+    model_add = ExponentialSmoothing(
+        ts,
+        trend='add',
+        seasonal='add',
+        seasonal_periods=12,
+        initialization_method='heuristic',
+        damped_trend=False
+    ).fit()
+
+    model_mul = ExponentialSmoothing(
+        ts,
+        trend='mul',
+        seasonal='mul',
+        seasonal_periods=12,
+        initialization_method='heuristic',
+        damped_trend=False
+    ).fit()
 
     forecast_add = np.round(model_add.forecast(12)).astype(int)
     forecast_mul = np.round(model_mul.forecast(12)).astype(int)
