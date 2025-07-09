@@ -31,6 +31,10 @@ def HW_ARMIMA(ts: pd.Series, hw_model: ExponentialSmoothing):
     3. Строит ARIMA модель на остатках
     4. Суммирует прогнозы HW и ARIMA
 
+    Пример:
+        >>> model = ExponentialSmoothing(ts, trend='add', seasonal='add').fit()
+        >>> forecast = HW_ARMIMA(ts, model)
+
     """
 
     if hw_model is None:
