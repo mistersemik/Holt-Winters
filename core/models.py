@@ -13,36 +13,6 @@ from tslearn.clustering import TimeSeriesKMeans
 from warnings import warn
 import pywt
 
-def build_model(data: pd.Series, trend='add',seasonal_type='add', seasonal_periods=12):
-    """
-    Строит и обучает модель Хольта-Винтерса для временных рядов.
-
-    Параметры:
-    - data: pandas.Series - временной ряд для обучения
-    - trend (str): 'add' для аддитивного или 'mul' для мультипликативного тренда
-    - seasonal_type: str - тип сезонности ('add' - аддитивная, 'mul' - мультипликативная)
-    - seasonal_periods: int - количество периодов в сезонном цикле (по умолчанию 12 для месячных данных)
-
-    Возвращает:
-    - Обученную модель ExponentialSmoothing
-    """
-
-    if trend not in ['add', 'mul']:
-        raise ValueError("trend должен быть 'add' или 'mul'")
-
-    if seasonal_type not in ['add', 'mul']:
-        raise ValueError("seasonal_type должен быть 'add' или 'mul'")
-
-    model = ExponentialSmoothing(
-        data,
-        trend=trend,
-        seasonal=seasonal_type,
-        seasonal_periods=seasonal_periods,
-        initialization_method='heuristic',
-        damped_trend=False
-    ).fit()
-    return model
-
 def HW_ARMIMA(ts: pd.Series, hw_model: ExponentialSmoothing):
     """
     Комбинированная модель Хольта-Винтерса и ARIMA для остатков.
