@@ -3,6 +3,8 @@ name: Python Security Scan
 on:
   push:
     branches: [ main, master ]
+    paths-ignore:
+      - '**.md'  # Игнорируем нефункциональные файлы
   pull_request:
     branches: [ '*' ]
 
@@ -16,51 +18,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.9
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9" 
-          cache: 'pip'
+          python-version: "3.9"
 
-      - name: Install dependencies
-        run: |
-          if [ -f "requirements.txt" ]; then
-            pip install -r requirements.txt
-          elif [ -f "pyproject.toml" ]; then
-            pip install .
-          fi
-
-      - name: Run Trivy Scanner
-        id: trivy-scan
+      - name: Scan with Trivy
         uses: aquasecurity/trivy-action@master
-        continue-on-error: true
         with:
           scan-type: 'fs'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
-          timeout: '5m'
-
-      - name: Verify SARIF file
-        if: steps.trivy-scan.outcome == 'success'
-        run: |
-          if [ ! -f "trivy-results.sarif" ]; then
-            echo "::warning::No SARIF file generated!"
-            exit 0
-          fi
-
-      - name: Upload results to GitHub Security
-        if: always() && steps.trivy-scan.outcome == 'success'
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
-          wait-for-processing: true
-
-      - name: Show summary
-        if: always()
-        run: |
-          echo "=== Trivy Scan Summary ==="
-          [ -f "trivy-results.sarif" ] && \
-            jq '.runs[0].results | length' trivy-results.sarif | \
-            xargs -I {} echo "Found {} vulnerabilities"
