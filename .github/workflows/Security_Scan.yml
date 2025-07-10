@@ -4,11 +4,11 @@ on:
   push:
     branches: [ main, master ]
     paths-ignore:
-      - '**.md'  # Игнорируем нефункциональные файлы
+      - '**.md'
   pull_request:
     branches: [ '*' ]
     paths:
-      - 'requirements.txt'  # Только при изменении зависимостей
+      - 'requirements.txt'
       - 'pyproject.toml'
 
 jobs:
