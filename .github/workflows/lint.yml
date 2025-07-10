@@ -3,8 +3,12 @@ name: Code Linting
 on:
   push:
     branches: [ main ]
+    paths:
+      - '**.py'  # Только при изменении Python-файлов
   pull_request:
     branches: [ '*' ]
+    paths:
+      - '**.py'
 
 jobs:
   lint:
@@ -13,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.9
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.9"
@@ -21,8 +25,8 @@ jobs:
       - name: Install linters
         run: pip install black flake8 mypy
 
-      - name: Run Black (проверка без ошибки)
-        run: black --check . || echo "⚠️ Black would reformat files (fix locally with 'black .')"
+      - name: Run Black
+        run: black --check . || echo "⚠️ Run 'black .' locally to fix formatting"
 
       - name: Run Flake8
         run: flake8 .
