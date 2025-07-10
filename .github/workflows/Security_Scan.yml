@@ -16,14 +16,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Установка Python 3.9 (точно соответствует вашей версии)
       - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9"  # Жёстко фиксируем версию
-          cache: 'pip'  # Кэшируем зависимости для ускорения
+          python-version: "3.9" 
+          cache: 'pip'
 
-      # Автоматическое определение менеджера зависимостей
       - name: Install dependencies
         run: |
           if [ -f "requirements.txt" ]; then
@@ -32,11 +30,10 @@ jobs:
             pip install .
           fi
 
-      # Умное сканирование с обработкой возможных ошибок
       - name: Run Trivy Scanner
         id: trivy-scan
         uses: aquasecurity/trivy-action@master
-        continue-on-error: true  # Продолжаем даже при ошибках
+        continue-on-error: true
         with:
           scan-type: 'fs'
           format: 'sarif'
@@ -45,7 +42,6 @@ jobs:
           ignore-unfixed: true
           timeout: '5m'
 
-      # Валидация наличия результатов перед загрузкой
       - name: Verify SARIF file
         if: steps.trivy-scan.outcome == 'success'
         run: |
@@ -54,7 +50,6 @@ jobs:
             exit 0
           fi
 
-      # Загрузка результатов (совместимость с CodeQL v3+)
       - name: Upload results to GitHub Security
         if: always() && steps.trivy-scan.outcome == 'success'
         uses: github/codeql-action/upload-sarif@v3
@@ -62,7 +57,6 @@ jobs:
           sarif_file: 'trivy-results.sarif'
           wait-for-processing: true
 
-      # Дополнительный отчёт в логах
       - name: Show summary
         if: always()
         run: |
