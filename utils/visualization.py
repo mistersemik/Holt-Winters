@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter, MaxNLocator
 from matplotlib.patches import Patch
 
-def plot_results(historical, forecast_add, forecast_mul, actual, model_type='HW', f1=None, f2=None, f3=None):
+def plot_results(historical, forecast_add, forecast_mul, actual,
+                 model_type='HW', f1=None, f2=None, f3=None):
     """
     Визуализирует результаты прогнозирования временного ряда с сравнением моделей и выделением аномалий.
 
