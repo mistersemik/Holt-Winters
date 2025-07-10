@@ -1,0 +1,30 @@
+name: Code Linting
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install linters
+        run: |
+          pip install black flake8 mypy
+
+      - name: Run Black (code formatting)
+        run: black --check .
+
+      - name: Run Flake8 (code style)
+        run: flake8 .
+
+      - name: Run Mypy (static typing)
+        run: mypy .
