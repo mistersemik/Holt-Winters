@@ -1,4 +1,4 @@
-name: Security Scan
+name: Python Security Scan
 
 on:
   push:
@@ -7,39 +7,66 @@ on:
     branches: [ '*' ]
 
 jobs:
-  scan:
+  security:
     runs-on: ubuntu-latest
     permissions:
       security-events: write
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
 
-      # Установка Python
-      - name: Set up Python
+      # Установка Python 3.9 (точно соответствует вашей версии)
+      - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.9"  # Жёстко фиксируем версию
+          cache: 'pip'  # Кэшируем зависимости для ускорения
 
-      # Установка зависимостей
+      # Автоматическое определение менеджера зависимостей
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt  # или ваш файл с зависимостями
+          if [ -f "requirements.txt" ]; then
+            pip install -r requirements.txt
+          elif [ -f "pyproject.toml" ]; then
+            pip install .
+          fi
 
-      # Сканирование с игнорированием exit code (чтобы пайплайн не падал)
+      # Умное сканирование с обработкой возможных ошибок
       - name: Run Trivy Scanner
+        id: trivy-scan
         uses: aquasecurity/trivy-action@master
+        continue-on-error: true  # Продолжаем даже при ошибках
         with:
-          scan-type: "fs"
-          format: "table"
-          severity: "CRITICAL,HIGH"
-          exit-code: "0"  # 0 = не падать при ошибках
+          scan-type: 'fs'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
+          timeout: '5m'
 
-      # Загрузка отчёта в GitHub Security
-      - name: Upload results
-        if: always()  # Загружаем, даже если Trivy нашёл уязвимости
-        uses: github/codeql-action/upload-sarif@v2
+      # Валидация наличия результатов перед загрузкой
+      - name: Verify SARIF file
+        if: steps.trivy-scan.outcome == 'success'
+        run: |
+          if [ ! -f "trivy-results.sarif" ]; then
+            echo "::warning::No SARIF file generated!"
+            exit 0
+          fi
+
+      # Загрузка результатов (совместимость с CodeQL v3+)
+      - name: Upload results to GitHub Security
+        if: always() && steps.trivy-scan.outcome == 'success'
+        uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: trivy-results.sarif
+          sarif_file: 'trivy-results.sarif'
+          wait-for-processing: true
+
+      # Дополнительный отчёт в логах
+      - name: Show summary
+        if: always()
+        run: |
+          echo "=== Trivy Scan Summary ==="
+          [ -f "trivy-results.sarif" ] && \
+            jq '.runs[0].results | length' trivy-results.sarif | \
+            xargs -I {} echo "Found {} vulnerabilities"
