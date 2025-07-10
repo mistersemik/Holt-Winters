@@ -1,0 +1,45 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ '*' ]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Установка Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      # Установка зависимостей
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt  # или ваш файл с зависимостями
+
+      # Сканирование с игнорированием exit code (чтобы пайплайн не падал)
+      - name: Run Trivy Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          format: "table"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"  # 0 = не падать при ошибках
+          ignore-unfixed: true
+
+      # Загрузка отчёта в GitHub Security
+      - name: Upload results
+        if: always()  # Загружаем, даже если Trivy нашёл уязвимости
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: trivy-results.sarif
