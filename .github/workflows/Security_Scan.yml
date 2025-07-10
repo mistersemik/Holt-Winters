@@ -7,6 +7,9 @@ on:
       - '**.md'  # Игнорируем нефункциональные файлы
   pull_request:
     branches: [ '*' ]
+    paths:
+      - 'requirements.txt'  # Только при изменении зависимостей
+      - 'pyproject.toml'
 
 jobs:
   security:
