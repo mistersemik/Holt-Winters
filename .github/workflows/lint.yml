@@ -1,8 +1,10 @@
 name: Code Linting
 
 on:
+  push:
+    branches: [ main, master ]
   pull_request:
-    branches: [ main ]
+    branches: [ '*' ]
 
 jobs:
   lint:
