@@ -61,5 +61,5 @@ jobs:
         run: ls -la
 
       - name: Print env.key of deploy
-        run: echo "key = ${env.key}"
+        run: echo "key = ${{env.key}}"
         
