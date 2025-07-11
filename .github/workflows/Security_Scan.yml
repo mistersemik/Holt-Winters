@@ -1,7 +1,7 @@
 name: Python Security Scan
 env:
   APLICATION_NAME: "Python Security Scan"
-  DEPLOY_PAKKAGE_NAME: "Test_Deploy-ver$({github.sha})"
+  DEPLOY_PAKKAGE_NAME: "Test_Deploy-ver${{github.sha}}"
 
 on:
   push:
