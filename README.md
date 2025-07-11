@@ -7,6 +7,10 @@
 ![Prophet 1.1.7](https://img.shields.io/badge/Prophet-1.1.7-black?logo=facebook)
 ![pmdarima 2.0.4](https://img.shields.io/badge/pmdarima-2.0.4-blueviolet)
 
+
+Status of Last Deployment:<br>
+<img src="https://github.com/mistersemik/Holt-Winters/workflows/Python-Security-Scan/badge.svg?brach=master"><br>
+
 # Гибридные модели прогнозирования временных рядов (Holt-Winters)
 ### 1. Остаточное обучение (Residual Forecasting)  
 - HW + ARIMA
