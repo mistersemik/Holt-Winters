@@ -47,8 +47,8 @@ jobs:
         run: |
           echo "Очередной вывод из линукса (1)"
           echo "Тоже вывод, но уже втотрой (2)"
-          echo "APLICATION_NAME: $({env.APLICATION_NAME})"
+          echo "APLICATION_NAME: ${{env.APLICATION_NAME}}"
 
       - name: Deploy packege
-        run: echo "Deploy packege is $({env.DEPLOY_PAKKAGE_NAME})"
+        run: echo "Deploy packege is ${{env.DEPLOY_PAKKAGE_NAME}}"
         
