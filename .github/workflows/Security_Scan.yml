@@ -1,4 +1,7 @@
 name: Python Security Scan
+env:
+  APLICATION_NAME: "Python Security Scan"
+  DEPLOY_PAKKAGE_NAME: "Test_Deploy-ver$({github.sha})"
 
 on:
   push:
@@ -34,10 +37,18 @@ jobs:
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
-  test:
+          
+  Deploy_version:
     runs-on: ubuntu-latest
     needs: [security]
+
     steps:
-      - name: Test
-        run: echo "Курлык из test-job !"
+      - name: Execure few commands
+        run: |
+          echo "Очередной вывод из линукса (1)"
+          echo "Тоже вывод, но уже втотрой (2)"
+          echo "APLICATION_NAME: $({env.APLICATION_NAME})"
+
+      - name: Deploy packege
+        run: echo "Deploy packege is $({env.DEPLOY_PAKKAGE_NAME})"
         
