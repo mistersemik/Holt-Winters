@@ -34,3 +34,10 @@ jobs:
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
+  test:
+    runs-on: ubuntu-latest
+    needs: [security]
+    steps:
+      - name: Test
+        run: echo "Курлык из test-job !"
+        
