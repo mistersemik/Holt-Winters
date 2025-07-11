@@ -51,4 +51,10 @@ jobs:
 
       - name: Deploy packege
         run: echo "Deploy packege is ${{env.DEPLOY_PAKKAGE_NAME}}"
+
+      - name: Git clone repo
+        uses: actions/checkout@v1
+        
+      - name: Show ls -la
+        run: ls -la
         
