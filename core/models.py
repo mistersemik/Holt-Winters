@@ -617,3 +617,9 @@ def naive_forecast(ts: pd.Series, periods: int = 12) -> pd.Series:
             freq='MS'
         )
     )
+
+def hw_garch(ts: pd.Series, hw_model: ExponentialSmoothing):
+    residuals = ts - hw_model.fittedvalues
+    garch = arch_model(residuals.dropna(), vol='Garch', p=1, q=1).fit(disp='off')
+    garch_forecast = garch.forecast(horizon=12).mean.iloc[-1].values
+    return hw_model.forecast(12) + garch_forecast
