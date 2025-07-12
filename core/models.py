@@ -12,6 +12,7 @@ import pymc as pm
 from tslearn.clustering import TimeSeriesKMeans
 from warnings import warn
 import pywt
+from arch import arch_model
 
 def HW_ARMIMA(ts: pd.Series, hw_model: ExponentialSmoothing):
     """
