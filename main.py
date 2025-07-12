@@ -298,5 +298,21 @@ def main():
         plot_results(ts, naive_unit, naive_unit, actual_series, model_type='Naive_Fallback', f1=f1, f2=f2, f3=f3)
         print_results(naive_unit, naive_unit, actual_series, month_names)
 
+
+    print('\nРезультат прогнозирования HW + GARCH')
+    garch_forecast_add = hw_garch(ts, model_add)
+    garch_forecast_mul = hw_garch(ts, model_mul)
+
+    plot_results(
+        ts,
+        garch_forecast_add,
+        garch_forecast_mul,
+        actual_series,
+        model_type='HW_GARCH',
+        f1=f1, f2=f2, f3=f3
+    )
+    print_results(garch_forecast_add, garch_forecast_mul, actual_series, month_names)
+
+
 if __name__ == "__main__":
     main()
