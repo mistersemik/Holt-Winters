@@ -13,6 +13,9 @@ from tslearn.clustering import TimeSeriesKMeans
 from warnings import warn
 import pywt
 from arch import arch_model
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+from statsmodels.nonparametric.kernel_regression import KernelReg
+from statsmodels.tsa.holtwinters import ExponentialSmoothing
 
 def HW_ARMIMA(ts: pd.Series, hw_model: ExponentialSmoothing):
     """
