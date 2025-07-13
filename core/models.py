@@ -624,3 +624,37 @@ def hw_garch(ts: pd.Series, hw_model: ExponentialSmoothing):
     garch = arch_model(residuals.dropna(), vol='Garch', p=1, q=1).fit(disp='off')
     garch_forecast = garch.forecast(horizon=12).mean.iloc[-1].values
     return hw_model.forecast(12) + garch_forecast
+
+def hw_sarima_ks(ts: pd.Series, hw_model: ExponentialSmoothing):
+    """
+    Гибридная модель: SARIMA + Kernel Smoothing для остатков
+
+    Параметры:
+        ts: Исходный временной ряд
+        hw_model: Обученная модель Хольта-Винтерса
+
+    Возвращает:
+        Комбинированный прогноз на 12 периодов
+    """
+    residuals = ts - hw_model.fittedvalues
+
+    try:
+        # SARIMA компонента
+        sarima = SARIMAX(residuals.dropna(),
+                         order=(1, 0, 1),
+                         seasonal_order=(1, 0, 1, 12)).fit(disp=False)
+        sarima_fc = sarima.forecast(12)
+
+        # Kernel Smoothing
+        kr = KernelReg(residuals.dropna().values,
+                       np.arange(len(residuals.dropna())),
+                       var_type='c')
+        kr_fc = kr.fit(np.arange(len(ts), len(ts) + 12))[0]
+
+        # Комбинированный прогноз (взвешенное среднее)
+        combined = hw_model.forecast(12) + (0.7 * sarima_fc + 0.3 * kr_fc)
+        return combined
+
+    except Exception as e:
+        print(f"Ошибка в SARIMA+KS: {str(e)}")
+        return hw_model.forecast(12)  # Fallback на базовый прогноз
