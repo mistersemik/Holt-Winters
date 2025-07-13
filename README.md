@@ -8,7 +8,7 @@
 ![pmdarima 2.0.4](https://img.shields.io/badge/pmdarima-2.0.4-blueviolet)
 
 
-Status of Last Deployment:<br>
+Статус последнего обновления:<br>
 <img src="https://github.com/mistersemik/Holt-Winters/workflows/Python-Security-Scan/badge.svg?brach=master"><br>
 
 # Гибридные модели прогнозирования временных рядов (Holt-Winters)
@@ -146,7 +146,16 @@ Status of Last Deployment:<br>
 - **Тип**: Базовый метод  
 - **Работа с остатками**: Не использует  
 - **Логика**: Простое повторение последнего значения  
-- **Применение**: Базовый benchmark для сравнения  
+- **Применение**: Базовый benchmark для сравнения
+
+### 10. `hw_garch`
+- **Тип**: Моделирование волатильности остатков  
+- **Работа с остатками**: GARCH(p=1, q=1) для кластеров волатильности  
+- **Формула**: `Прогноз = HW_forecast + GARCH(residuals)`  
+- **Применение**: Когда остатки демонстрируют периоды высокой/низкой волатильности  
+- **Инициализация**:  
+  ```python
+  forecast = hw_garch(ts, hw_model)
 
 ```diff
 ! Важное отличие: 
@@ -178,3 +187,18 @@ Status of Last Deployment:<br>
 2. Установите зависимости
     ```bash
    pip install -r requirements.txt
+
+### Ключевые зависимости:
+- Базовые:  
+  ![Python](https://img.shields.io/badge/python-3.8%2B-blue)
+  ![Pandas](https://img.shields.io/badge/pandas-1.5%2B-blueviolet)
+  ![NumPy](https://img.shields.io/badge/numpy-1.23%2B-013243)
+
+- Моделирование:  
+  ![ARCH](https://img.shields.io/badge/ARCH-5.3+-yellow)
+  ![Statsmodels](https://img.shields.io/badge/statsmodels-0.14.1-8B0000)
+  ![PyMC](https://img.shields.io/badge/PyMC-5.12.0-FFD43B)
+
+- Нейросети:  
+  ![TensorFlow](https://img.shields.io/badge/TensorFlow-2.19.0-FF6F00)
+  ![Keras](https://img.shields.io/badge/Keras-3.10.0-D00000)
