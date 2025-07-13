@@ -313,6 +313,21 @@ def main():
     )
     print_results(garch_forecast_add, garch_forecast_mul, actual_series, month_names)
 
+    # Гибрид SARIMA + Kernel Smoothing
+    print('\nРезультат прогнозирования HW + SARIMA_KS')
+    sarimaks_forecast_add = hw_sarima_ks(ts, model_add)
+    sarimaks_forecast_mul = hw_sarima_ks(ts, model_mul)
+
+    plot_results(
+        ts,
+        sarimaks_forecast_add,
+        sarimaks_forecast_mul,
+        actual_series,
+        model_type='HW_SARIMA_KS',
+        f1=f1, f2=f2, f3=f3
+    )
+    print_results(sarimaks_forecast_add, sarimaks_forecast_mul, actual_series, month_names)
+
 
 if __name__ == "__main__":
     main()
