@@ -1,4 +1,20 @@
 # Журнал изменений
+## [0.12.1] - 2025-07-14
+### Изменено
+- Опмтимизация `action` в `GitHub`
+- Чиста кода с использованием `flask8`
+  - `models.py`, `calculation.py`, `preprocessing.py`,
+  `main.py`, `__version__.py`, `config_loader.py`,
+  `visualization.py`
+
+### Удалено:
+- Закоментирована "неиспользуемая"
+`resid_forecast` в `hw_bayesian_ensemble.models`
+
+### Планируемые изменения
+ - Исправить работоспособность`hw_bayesian_ensemble`
+ - Исправить прочие методы
+
 ## [0.12.0] - 2025-07-13
 ### Добавлено
 - Комбинорованная модель`hw_garch` - GARCH на остатках

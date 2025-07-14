@@ -4,10 +4,12 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter, MaxNLocator
 from matplotlib.patches import Patch
 
+
 def plot_results(historical, forecast_add, forecast_mul, actual,
                  model_type='HW', f1=None, f2=None, f3=None):
     """
-    Визуализирует результаты прогнозирования временного ряда с сравнением моделей и выделением аномалий.
+    Визуализирует результаты прогнозирования
+    временного ряда с сравнением моделей и выделением аномалий.
 
     Параметры:
     ----------
@@ -20,16 +22,19 @@ def plot_results(historical, forecast_add, forecast_mul, actual,
     actual : pandas.Series
         Фактические значения для сравнения с прогнозом.
     model_type : str, optional
-        Тип модели ('HW', 'HW_ARIMA' или 'HW_LSTM'), определяющий подписи в легенде.
+        Тип модели ('HW', 'HW_ARIMA' или 'HW_LSTM'),
+        определяющий подписи в легенде.
         По умолчанию 'HW'.
     f1, f2, f3 : str, optional
         Метки годов для подписей на графике (например, '2021', '2022').
 
     Особенности:
     -----------
-    - Строит 4 линии на одном графике: исторические данные, два прогноза и фактические значения
+    - Строит 4 линии на одном графике:
+    исторические данные, два прогноза и фактические значения
     - Автоматически форматирует оси (разделители тысяч, целые числа)
-    - Выделяет аномалии в исторических данных (желтым) и неожиданные фактические значения (красным)
+    - Выделяет аномалии в исторических данных (желтым) и неожиданные
+    фактические значения (красным)
     - Использует разные стили линий и маркеров для каждого типа данных
     - Генерирует информативную легенду с элементами:
         * Основные линии данных
@@ -54,7 +59,11 @@ def plot_results(historical, forecast_add, forecast_mul, actual,
     ax = plt.gca()
 
     # Форматирование оси Y
-    ax.yaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{int(x):,}".replace(",", " ")))
+    ax.yaxis.set_major_formatter(
+        FuncFormatter(
+            lambda x, _: f"{int(x):,}".replace(",", " ")
+        )
+    )
     ax.yaxis.set_major_locator(MaxNLocator(integer=True))
 
     # Стили для аномалий
@@ -70,34 +79,78 @@ def plot_results(historical, forecast_add, forecast_mul, actual,
     }
 
     # Основные графики
-    hist_line = plt.plot(historical.index, historical, 'b-', label=labels['historical'],
-                        marker='o', linewidth=2)[0]
-    add_line = plt.plot(forecast_add.index, forecast_add, 'g--', label=labels['add'],
-                       marker='s', linewidth=2)[0]
-    mul_line = plt.plot(forecast_mul.index, forecast_mul, 'r--', label=labels['mul'],
-                       marker='^', linewidth=2)[0]
-    actual_line = plt.plot(actual.index, actual, 'k-', label=labels['actual'],
-                          marker='D', linewidth=2, markersize=8)[0]
+    hist_line = (
+        plt.plot(
+            historical.index,
+            historical,
+            'b-',
+            label=labels['historical'],
+            marker='o',
+            linewidth=2)[0]
+    )
+
+    add_line = (
+        plt.plot(
+            forecast_add.index,
+            forecast_add,
+            'g--',
+            label=labels['add'],
+            marker='s',
+            linewidth=2)[0]
+    )
+
+    mul_line = (
+        plt.plot(
+            forecast_mul.index,
+            forecast_mul,
+            'r--',
+            label=labels['mul'],
+            marker='^', linewidth=2)[0]
+    )
+
+    actual_line = (
+        plt.plot(
+            actual.index,
+            actual,
+            'k-',
+            label=labels['actual'],
+            marker='D',
+            linewidth=2,
+            markersize=8)[0]
+    )
 
     # Детекция аномалий
     def detect_anomalies(series, window=12):
+
         rolling = series.rolling(window)
-        mad = 1.4826 * rolling.apply(lambda x: np.median(np.abs(x - np.median(x))))
+
+        mad = (1.4826
+               * rolling.apply(lambda x: np.median(np.abs(x - np.median(x)))))
+
         return series[np.abs(series - rolling.median()) > 3 * mad]
 
     # Подсветка исторических аномалий
     hist_anomalies = detect_anomalies(historical)
     for date in hist_anomalies.index:
-        plt.axvspan(date - pd.Timedelta(days=15), date + pd.Timedelta(days=15),
-                   color=HIST_ANOMALY_COLOR, alpha=ALPHA)
+        plt.axvspan(
+            date - pd.Timedelta(days=15),
+            date + pd.Timedelta(days=15),
+            color=HIST_ANOMALY_COLOR,
+            alpha=ALPHA
+        )
 
     # Подсветка неожиданных фактических значений
     forecast_avg = (forecast_add + forecast_mul) / 2
     deviations = np.abs(actual - forecast_avg[:len(actual)])
     actual_anomalies = actual[deviations > deviations.quantile(0.9) * 2]
+
     for date in actual_anomalies.index:
-        plt.axvspan(date - pd.Timedelta(days=15), date + pd.Timedelta(days=15),
-                   color=ACTUAL_ANOMALY_COLOR, alpha=ALPHA)
+        plt.axvspan(
+            date - pd.Timedelta(days=15),
+            date + pd.Timedelta(days=15),
+            color=ACTUAL_ANOMALY_COLOR,
+            alpha=ALPHA
+        )
 
     # Создаем элементы для легенды
     legend_elements = [
@@ -105,14 +158,32 @@ def plot_results(historical, forecast_add, forecast_mul, actual,
         add_line,
         mul_line,
         actual_line,
-        Patch(facecolor=HIST_ANOMALY_COLOR, alpha=ALPHA, label='Исторические аномалии'),
-        Patch(facecolor=ACTUAL_ANOMALY_COLOR, alpha=ALPHA, label='Неожиданные значения')
+        Patch(
+            facecolor=HIST_ANOMALY_COLOR,
+            alpha=ALPHA,
+            label='Исторические аномалии'
+        ),
+
+        Patch(
+            facecolor=ACTUAL_ANOMALY_COLOR,
+            alpha=ALPHA,
+            label='Неожиданные значения'
+        )
     ]
 
     # Настройка отображения
-    title_suffix = 'модели Хольта-Винтерса' if model_type == 'HW' else 'комбинированные модели'
-    plt.title(f'Прогноз и фактические значения ({f1}-{f3}), {title_suffix}',
-              fontsize=16, pad=20)
+    title_suffix = (
+        'модели Хольта-Винтерса'
+        if model_type == 'HW'
+        else 'комбинированные модели'
+    )
+
+    plt.title(
+        f'Прогноз и фактические значения ({f1}-{f3}),'
+        f'{title_suffix}',
+        fontsize=16, pad=20
+    )
+
     plt.xlabel('Месяц', fontsize=14)
     plt.ylabel('Количество атак', fontsize=14)
     plt.legend(handles=legend_elements, fontsize=12, loc='upper left')
