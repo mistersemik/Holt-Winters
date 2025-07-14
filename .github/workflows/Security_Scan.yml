@@ -1,7 +1,4 @@
 name: Python-Security-Scan
-env:
-  APLICATION_NAME: "Python Security Scan"
-  DEPLOY_PAKKAGE_NAME: "Test_Deploy-ver${{github.sha}}"
 
 on:
   push:
@@ -17,6 +14,9 @@ on:
 jobs:
   Python_Security_Scan:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8","3.9","3.10","3.11"]
     permissions:
       security-events: write
       contents: read
@@ -27,7 +27,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9"
+          python-version: ${{ matrix.python-version }}
 
       - name: Scan with Trivy
         uses: aquasecurity/trivy-action@master
@@ -36,30 +36,4 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
-          ignore-unfixed: true
-          
-  Deploy_version:
-    runs-on: ubuntu-latest
-    needs: [Python_Security_Scan]
-    env:
-      key: "Переменная окружения Deploy_version (первая)"
-
-    steps:
-      - name: Execure few commands
-        run: |
-          echo "Очередной вывод из линукса (1)"
-          echo "Тоже вывод, но уже втотрой (2)"
-          echo "APLICATION_NAME: ${{env.APLICATION_NAME}}"
-
-      - name: Deploy packege
-        run: echo "Deploy packege is ${{env.DEPLOY_PAKKAGE_NAME}}"
-
-      - name: Git clone repo
-        uses: actions/checkout@v1
-        
-      - name: Show ls -la
-        run: ls -la
-
-      - name: Print env.key of deploy
-        run: echo "key = ${{env.key}}"
-        
+          ignore-unfixed: true        
