@@ -27,7 +27,7 @@ jobs:
         run: pip install black flake8 mypy
 
       - name: Run Black
-        run: black --check . || echo "⚠️ Run 'black .' locally to fix formatting"
+        run: black --check .
 
       - name: Run Flake8
         run: flake8 .

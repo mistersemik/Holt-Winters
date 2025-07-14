@@ -5,8 +5,16 @@ from matplotlib.ticker import FuncFormatter, MaxNLocator
 from matplotlib.patches import Patch
 
 
-def plot_results(historical, forecast_add, forecast_mul, actual,
-                 model_type='HW', f1=None, f2=None, f3=None):
+def plot_results(
+    historical,
+    forecast_add,
+    forecast_mul,
+    actual,
+    model_type="HW",
+    f1=None,
+    f2=None,
+    f3=None,
+):
     """
     Визуализирует результаты прогнозирования
     временного ряда с сравнением моделей и выделением аномалий.
@@ -60,72 +68,68 @@ def plot_results(historical, forecast_add, forecast_mul, actual,
 
     # Форматирование оси Y
     ax.yaxis.set_major_formatter(
-        FuncFormatter(
-            lambda x, _: f"{int(x):,}".replace(",", " ")
-        )
+        FuncFormatter(lambda x, _: f"{int(x):,}".replace(",", " "))
     )
     ax.yaxis.set_major_locator(MaxNLocator(integer=True))
 
     # Стили для аномалий
-    HIST_ANOMALY_COLOR = 'gold'
-    ACTUAL_ANOMALY_COLOR = 'salmon'
+    HIST_ANOMALY_COLOR = "gold"
+    ACTUAL_ANOMALY_COLOR = "salmon"
     ALPHA = 0.3
 
     labels = {
-        'historical': f"Исторические данные ({f1}-{f2})",
-        'add': f'Прогноз (аддитивная {model_type})',
-        'mul': f'Прогноз (мультипликативная {model_type})',
-        'actual': f"Фактические данные {f3}"
+        "historical": f"Исторические данные ({f1}-{f2})",
+        "add": f"Прогноз (аддитивная {model_type})",
+        "mul": f"Прогноз (мультипликативная {model_type})",
+        "actual": f"Фактические данные {f3}",
     }
 
     # Основные графики
-    hist_line = (
-        plt.plot(
-            historical.index,
-            historical,
-            'b-',
-            label=labels['historical'],
-            marker='o',
-            linewidth=2)[0]
-    )
+    hist_line = plt.plot(
+        historical.index,
+        historical,
+        "b-",
+        label=labels["historical"],
+        marker="o",
+        linewidth=2,
+    )[0]
 
-    add_line = (
-        plt.plot(
-            forecast_add.index,
-            forecast_add,
-            'g--',
-            label=labels['add'],
-            marker='s',
-            linewidth=2)[0]
-    )
+    add_line = plt.plot(
+        forecast_add.index,
+        forecast_add,
+        "g--",
+        label=labels["add"],
+        marker="s",
+        linewidth=2,
+    )[0]
 
-    mul_line = (
-        plt.plot(
-            forecast_mul.index,
-            forecast_mul,
-            'r--',
-            label=labels['mul'],
-            marker='^', linewidth=2)[0]
-    )
+    mul_line = plt.plot(
+        forecast_mul.index,
+        forecast_mul,
+        "r--",
+        label=labels["mul"],
+        marker="^",
+        linewidth=2,
+    )[0]
 
-    actual_line = (
-        plt.plot(
-            actual.index,
-            actual,
-            'k-',
-            label=labels['actual'],
-            marker='D',
-            linewidth=2,
-            markersize=8)[0]
-    )
+    actual_line = plt.plot(
+        actual.index,
+        actual,
+        "k-",
+        label=labels["actual"],
+        marker="D",
+        linewidth=2,
+        markersize=8,
+    )[0]
 
     # Детекция аномалий
     def detect_anomalies(series, window=12):
 
         rolling = series.rolling(window)
 
-        mad = (1.4826
-               * rolling.apply(lambda x: np.median(np.abs(x - np.median(x)))))
+        mad = 1.4826 * rolling.apply(
+            lambda x: np.median(np.abs(x - np.median(x)))
+        )
 
         return series[np.abs(series - rolling.median()) > 3 * mad]
 
@@ -136,12 +140,12 @@ def plot_results(historical, forecast_add, forecast_mul, actual,
             date - pd.Timedelta(days=15),
             date + pd.Timedelta(days=15),
             color=HIST_ANOMALY_COLOR,
-            alpha=ALPHA
+            alpha=ALPHA,
         )
 
     # Подсветка неожиданных фактических значений
     forecast_avg = (forecast_add + forecast_mul) / 2
-    deviations = np.abs(actual - forecast_avg[:len(actual)])
+    deviations = np.abs(actual - forecast_avg[: len(actual)])
     actual_anomalies = actual[deviations > deviations.quantile(0.9) * 2]
 
     for date in actual_anomalies.index:
@@ -149,7 +153,7 @@ def plot_results(historical, forecast_add, forecast_mul, actual,
             date - pd.Timedelta(days=15),
             date + pd.Timedelta(days=15),
             color=ACTUAL_ANOMALY_COLOR,
-            alpha=ALPHA
+            alpha=ALPHA,
         )
 
     # Создаем элементы для легенды
@@ -161,33 +165,32 @@ def plot_results(historical, forecast_add, forecast_mul, actual,
         Patch(
             facecolor=HIST_ANOMALY_COLOR,
             alpha=ALPHA,
-            label='Исторические аномалии'
+            label="Исторические аномалии",
         ),
-
         Patch(
             facecolor=ACTUAL_ANOMALY_COLOR,
             alpha=ALPHA,
-            label='Неожиданные значения'
-        )
+            label="Неожиданные значения",
+        ),
     ]
 
     # Настройка отображения
     title_suffix = (
-        'модели Хольта-Винтерса'
-        if model_type == 'HW'
-        else 'комбинированные модели'
+        "модели Хольта-Винтерса"
+        if model_type == "HW"
+        else "комбинированные модели"
     )
 
     plt.title(
-        f'Прогноз и фактические значения ({f1}-{f3}),'
-        f'{title_suffix}',
-        fontsize=16, pad=20
+        f"Прогноз и фактические значения ({f1}-{f3})," f"{title_suffix}",
+        fontsize=16,
+        pad=20,
     )
 
-    plt.xlabel('Месяц', fontsize=14)
-    plt.ylabel('Количество атак', fontsize=14)
-    plt.legend(handles=legend_elements, fontsize=12, loc='upper left')
-    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.xlabel("Месяц", fontsize=14)
+    plt.ylabel("Количество атак", fontsize=14)
+    plt.legend(handles=legend_elements, fontsize=12, loc="upper left")
+    plt.grid(True, linestyle="--", alpha=0.7)
     plt.xticks(rotation=45, fontsize=12)
     plt.tight_layout()
     plt.show()

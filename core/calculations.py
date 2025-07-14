@@ -45,7 +45,7 @@ def calculate_metrics(forecast, actual):
     >>> print(f"MAE: {mae:.2f}, RMSE: {rmse:.2f}, MAPE: {mape:.1f}%")
     MAE: 2.00, RMSE: 2.16, MAPE: 10.2%
     """
-    forecast = forecast[:len(actual)]
+    forecast = forecast[: len(actual)]
     # Средняя абсолютная ошибка
     mae = mean_absolute_error(actual, forecast)
 

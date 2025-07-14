@@ -16,9 +16,7 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 from statsmodels.nonparametric.kernel_regression import KernelReg
 
 
-def HW_ARMIMA(
-        ts: pd.Series,
-        hw_model: ExponentialSmoothing):
+def HW_ARMIMA(ts: pd.Series, hw_model: ExponentialSmoothing):
     """
     Комбинированная модель Хольта-Винтерса и ARIMA для остатков.
     Использует преимущества обеих моделей:
@@ -61,15 +59,13 @@ def HW_ARMIMA(
         residuals.dropna(),
         seasonal=False,
         suppress_warnings=True,
-        error_action='ignore'
+        error_action="ignore",
     )
 
     # Прогнозируем остатки на 12 периодов
     arima_forecast = arima_model.predict(n_periods=12)
     forecast_dates = pd.date_range(
-        start=ts.index[-1] + pd.DateOffset(months=1),
-        periods=12,
-        freq='MS'
+        start=ts.index[-1] + pd.DateOffset(months=1), periods=12, freq="MS"
     )
 
     # Комбинируем прогнозы
@@ -77,9 +73,12 @@ def HW_ARMIMA(
 
 
 def HW_LSTM(
-        ts: pd.Series,
-        hw_model: ExponentialSmoothing,
-        n_steps=3, n_epochs=50, n_neurons=50):
+    ts: pd.Series,
+    hw_model: ExponentialSmoothing,
+    n_steps=3,
+    n_epochs=50,
+    n_neurons=50,
+):
     """
     Комбинированная модель Хольта-Винтерса + LSTM.
 
@@ -111,18 +110,15 @@ def HW_LSTM(
     def create_dataset(data, n_steps):
         X, y = [], []
         for i in range(len(data) - n_steps):
-            X.append(data[i:i + n_steps, 0])
+            X.append(data[i : i + n_steps, 0])
             y.append(data[i + n_steps, 0])
         return np.array(X), np.array(y)
 
     X, y = create_dataset(residuals_scaled, n_steps)
     X = X.reshape(X.shape[0], X.shape[1], 1)
 
-    model = Sequential([
-        LSTM(n_neurons, activation='relu'),
-        Dense(1)
-    ])
-    model.compile(optimizer='adam', loss='mse')
+    model = Sequential([LSTM(n_neurons, activation="relu"), Dense(1)])
+    model.compile(optimizer="adam", loss="mse")
     model.fit(X, y, epochs=n_epochs, verbose=0)
 
     last_residuals = residuals_scaled[-n_steps:].reshape(1, n_steps, 1)
@@ -130,26 +126,25 @@ def HW_LSTM(
     for _ in range(12):
         pred = model.predict(last_residuals, verbose=0)
         lstm_forecast_scaled.append(pred[0, 0])
-        last_residuals = np.append(last_residuals[:, 1:, :],
-                                   pred.reshape(1, 1, 1), axis=1)
+        last_residuals = np.append(
+            last_residuals[:, 1:, :], pred.reshape(1, 1, 1), axis=1
+        )
 
     # Исправление формы данных для inverse_transform
     lstm_forecast = scaler.inverse_transform(
-        np.array(lstm_forecast_scaled).reshape(-1, 1)).flatten()
+        np.array(lstm_forecast_scaled).reshape(-1, 1)
+    ).flatten()
 
     forecast_dates = pd.date_range(
-        start=ts.index[-1] + pd.DateOffset(months=1),
-        periods=12,
-        freq='MS'
+        start=ts.index[-1] + pd.DateOffset(months=1), periods=12, freq="MS"
     )
 
     return pd.Series(hw_forecast.values + lstm_forecast, index=forecast_dates)
 
 
 def hw_prophet_ensemble(
-        ts: pd.Series,
-        hw_model: ExponentialSmoothing,
-        holidays_df=None):
+    ts: pd.Series, hw_model: ExponentialSmoothing, holidays_df=None
+):
     """
     Комбинированная модель Хольта-Винтерса и Prophet для временных рядов
 
@@ -189,8 +184,11 @@ def hw_prophet_ensemble(
         raise ValueError("Индекс ts должен быть DatetimeIndex")
 
     # Определение типа сезонности из модели HW
-    seasonal_mode = 'multiplicative' \
-        if getattr(hw_model, 'seasonal', None) == 'mul' else 'additive'
+    seasonal_mode = (
+        "multiplicative"
+        if getattr(hw_model, "seasonal", None) == "mul"
+        else "additive"
+    )
 
     # Инициализация Prophet
     model = Prophet(
@@ -198,36 +196,35 @@ def hw_prophet_ensemble(
         seasonality_mode=seasonal_mode,
         yearly_seasonality=True,
         weekly_seasonality=False,
-        daily_seasonality=False
+        daily_seasonality=False,
     )
 
     # Работа с остатками
     residuals = ts - hw_model.fittedvalues
     prophet_data = residuals.reset_index()
-    prophet_data.columns = ['ds', 'y']
+    prophet_data.columns = ["ds", "y"]
 
     # Обучение и прогноз
     model.fit(prophet_data.dropna())
-    future = model.make_future_dataframe(periods=12, freq='MS')
-    prophet_forecast = model.predict(future)['yhat'][-12:].values
+    future = model.make_future_dataframe(periods=12, freq="MS")
+    prophet_forecast = model.predict(future)["yhat"][-12:].values
 
     # Комбинированный результат
     forecast_dates = pd.date_range(
-        start=ts.index[-1] + pd.DateOffset(months=1),
-        periods=12,
-        freq='MS'
+        start=ts.index[-1] + pd.DateOffset(months=1), periods=12, freq="MS"
     )
 
     return pd.Series(
-        hw_model.forecast(12).values + prophet_forecast,
-        index=forecast_dates
+        hw_model.forecast(12).values + prophet_forecast, index=forecast_dates
     )
 
 
 def hw_xgboost_ensemble(
-        ts: pd.Series,
-        hw_model: ExponentialSmoothing,
-        exog_features=None, forecast_steps=12):
+    ts: pd.Series,
+    hw_model: ExponentialSmoothing,
+    exog_features=None,
+    forecast_steps=12,
+):
     """
     Улучшенная версия комбинированной модели HW + XGBoost
 
@@ -246,8 +243,9 @@ def hw_xgboost_ensemble(
             raise ValueError("hw_model не может быть None")
 
         if len(ts) < 24:  # Минимум 2 года данных
-            raise ValueError("Недостаточно данных "
-                             "для обучения (минимум 24 периода)")
+            raise ValueError(
+                "Недостаточно данных " "для обучения (минимум 24 периода)"
+            )
 
         # 2. Прогноз HW
         hw_forecast = hw_model.forecast(forecast_steps)
@@ -262,26 +260,31 @@ def hw_xgboost_ensemble(
             # 3 лага + прогнозируемые периоды
             min_required_length = 4 + forecast_steps
             if len(residuals) < min_required_length:
-                raise ValueError(f"Недостаточно"
-                                 f"данных для лагов. Нужно"
-                                 f"{min_required_length}, "
-                                 f"есть {len(residuals)}")
+                raise ValueError(
+                    f"Недостаточно"
+                    f"данных для лагов. Нужно"
+                    f"{min_required_length}, "
+                    f"есть {len(residuals)}"
+                )
 
-            lag_data = pd.DataFrame({
-                'lag1': residuals.shift(1),
-                'lag2': residuals.shift(2),
-                'lag3': residuals.shift(3),
-                'target': residuals
-            }).dropna()
+            lag_data = pd.DataFrame(
+                {
+                    "lag1": residuals.shift(1),
+                    "lag2": residuals.shift(2),
+                    "lag3": residuals.shift(3),
+                    "target": residuals,
+                }
+            ).dropna()
 
             # Разделение на обучающую и тестовую выборки
-            X = lag_data[['lag1', 'lag2', 'lag3']]
-            y = lag_data['target']
+            X = lag_data[["lag1", "lag2", "lag3"]]
+            y = lag_data["target"]
 
             split_point = len(X) - forecast_steps
             if split_point <= 0:
-                raise ValueError("Недостаточно данных "
-                                 "для разделения на train/test")
+                raise ValueError(
+                    "Недостаточно данных " "для разделения на train/test"
+                )
 
             X_train, X_test = X.iloc[:split_point], X.iloc[split_point:]
             y_train = y.iloc[:split_point]
@@ -300,12 +303,13 @@ def hw_xgboost_ensemble(
 
         # 5. Обучение модели
         from xgboost import XGBRegressor
+
         model = XGBRegressor(
-            objective='reg:squarederror',
+            objective="reg:squarederror",
             n_estimators=150,
             max_depth=5,
             learning_rate=0.1,
-            random_state=42
+            random_state=42,
         )
 
         model.fit(X_train, y_train)
@@ -320,7 +324,7 @@ def hw_xgboost_ensemble(
         forecast_dates = pd.date_range(
             start=ts.index[-1] + pd.DateOffset(months=1),
             periods=forecast_steps,
-            freq='MS'
+            freq="MS",
         )
 
         return pd.Series(combined_forecast, index=forecast_dates)
@@ -332,9 +336,11 @@ def hw_xgboost_ensemble(
 
 
 def build_hw_tcn_model(
-        hw_model: ExponentialSmoothing,
-        ts: pd.Series, n_steps=24,
-        forecast_steps=12):
+    hw_model: ExponentialSmoothing,
+    ts: pd.Series,
+    n_steps=24,
+    forecast_steps=12,
+):
     """
     Создает и возвращает комбинированный прогноз HW-TCN
 
@@ -362,16 +368,17 @@ def build_hw_tcn_model(
     def create_sequences(data, n_steps):
         X, y = [], []
         for i in range(len(data) - n_steps):
-            X.append(data[i:i + n_steps])
+            X.append(data[i : i + n_steps])
             y.append(data[i + n_steps])
         return np.array(X), np.array(y)
 
     def build_tcn_residual_model(input_shape):
         """Создает архитектуру TCN модели для остатков"""
         inputs = Input(shape=input_shape)
-        x = Conv1D(64, kernel_size=3, dilation_rate=1,
-                   padding='causal')(inputs)
-        x = Conv1D(64, kernel_size=3, dilation_rate=2, padding='causal')(x)
+        x = Conv1D(64, kernel_size=3, dilation_rate=1, padding="causal")(
+            inputs
+        )
+        x = Conv1D(64, kernel_size=3, dilation_rate=2, padding="causal")(x)
         outputs = Dense(1)(x)
         return Model(inputs, outputs)
 
@@ -381,7 +388,7 @@ def build_hw_tcn_model(
 
     # Построение и обучение TCN
     tcn_model = build_tcn_residual_model(input_shape=(n_steps, 1))
-    tcn_model.compile(optimizer='adam', loss='mse')
+    tcn_model.compile(optimizer="adam", loss="mse")
     tcn_model.fit(X, y, epochs=50, batch_size=32, verbose=0)
 
     # Прогнозирование остатков
@@ -403,16 +410,15 @@ def build_hw_tcn_model(
     forecast_dates = pd.date_range(
         start=ts.index[-1] + pd.DateOffset(months=1),
         periods=forecast_steps,
-        freq='MS'
+        freq="MS",
     )
 
     return combined_forecast, hw_forecast, tcn_forecast, forecast_dates
 
 
 def hw_bayesian_ensemble(
-        ts: pd.Series,
-        hw_model: ExponentialSmoothing,
-        forecast_steps=12):
+    ts: pd.Series, hw_model: ExponentialSmoothing, forecast_steps=12
+):
     """
     Байесовский ансамбль с моделью Хольта-Винтерса
 
@@ -431,28 +437,19 @@ def hw_bayesian_ensemble(
     # 2. Создаем байесовскую модель для остатков
     with pm.Model() as model:
         # Моделируем остатки как случайное блуждание
-        sigma = pm.HalfNormal('sigma', 1)
+        sigma = pm.HalfNormal("sigma", 1)
         resid_process = pm.GaussianRandomWalk(
-            'resid_process',
-            sigma=sigma,
-            shape=len(residuals)
+            "resid_process", sigma=sigma, shape=len(residuals)
         )
 
         # Модель наблюдений
         pm.Normal(
-            'obs',
-            mu=resid_process,
-            sigma=0.1,
-            observed=residuals.values
+            "obs", mu=resid_process, sigma=0.1, observed=residuals.values
         )
 
         # Сэмплирование
         trace = pm.sample(
-            1000,
-            tune=1000,
-            chains=2,
-            target_accept=0.9,
-            progressbar=False
+            1000, tune=1000, chains=2, target_accept=0.9, progressbar=False
         )
 
         # Прогнозирование остатков
@@ -466,16 +463,14 @@ def hw_bayesian_ensemble(
 
             # Генерируем прогноз
             forecast = pm.sample_posterior_predictive(
-                trace,
-                var_names=['resid_forecast']
+                trace, var_names=["resid_forecast"]
             )
 
     # 3. Комбинируем с прогнозом HW
     hw_forecast = hw_model.forecast(forecast_steps)
-    bayesian_resid_forecast = (
-        forecast.posterior_predictive['resid_forecast']
-        .mean(axis=(0, 1))
-    )
+    bayesian_resid_forecast = forecast.posterior_predictive[
+        "resid_forecast"
+    ].mean(axis=(0, 1))
 
     combined_forecast = hw_forecast + bayesian_resid_forecast
 
@@ -483,7 +478,7 @@ def hw_bayesian_ensemble(
     forecast_dates = pd.date_range(
         start=ts.index[-1] + pd.DateOffset(months=1),
         periods=forecast_steps,
-        freq='MS'
+        freq="MS",
     )
 
     return pd.Series(combined_forecast, index=forecast_dates), trace
@@ -525,7 +520,7 @@ def clustered_hw(ts: pd.Series, hw_model: ExponentialSmoothing, n_clusters=3):
     # 3. Подготовка остатков для кластеризации (группировка по годам)
     resid_values = residuals.values
     n_years = len(resid_values) // 12
-    X = resid_values[:n_years * 12].reshape(n_years, 12)
+    X = resid_values[: n_years * 12].reshape(n_years, 12)
 
     # Автокоррекция числа кластеров
     n_clusters = min(n_clusters, n_years)
@@ -536,9 +531,7 @@ def clustered_hw(ts: pd.Series, hw_model: ExponentialSmoothing, n_clusters=3):
         X_scaled = scaler.fit_transform(X.T).T
 
         km = TimeSeriesKMeans(
-            n_clusters=n_clusters,
-            metric="dtw",
-            random_state=42
+            n_clusters=n_clusters, metric="dtw", random_state=42
         )
         clusters = km.fit_predict(X_scaled.reshape(n_years, 12, 1))
     except Exception as e:
@@ -579,15 +572,17 @@ def clustered_hw(ts: pd.Series, hw_model: ExponentialSmoothing, n_clusters=3):
         forecast,
         pd.Series(
             cluster_weights,
-            index=[f'Cluster_{i}' for i in range(len(cluster_weights))]
-        )
+            index=[f"Cluster_{i}" for i in range(len(cluster_weights))],
+        ),
     )
 
 
 def wavelet_hw(
-        ts: pd.Series,
-        hw_model: ExponentialSmoothing,
-        wavelet='db4', forecast_periods=12):
+    ts: pd.Series,
+    hw_model: ExponentialSmoothing,
+    wavelet="db4",
+    forecast_periods=12,
+):
     """
     Улучшенная вейвлет-модель Хольта-Винтерса
 
@@ -629,11 +624,12 @@ def wavelet_hw(
         )
 
         # Вейвлет-разложение
-        max_level = pywt.dwt_max_level(len(ts_normalized),
-                                       pywt.Wavelet(wavelet))
+        max_level = pywt.dwt_max_level(
+            len(ts_normalized), pywt.Wavelet(wavelet)
+        )
 
         level = min(3, max_level) if max_level is not None else 3
-        coeffs = pywt.wavedec(ts_normalized, wavelet, level=level, mode='per')
+        coeffs = pywt.wavedec(ts_normalized, wavelet, level=level, mode="per")
 
         # Прогнозирование компонент
         forecast_coeffs = []
@@ -645,9 +641,9 @@ def wavelet_hw(
             forecast_coeffs.append(fc)
 
         # Вейвлет-реконструкция
-        forecast_normalized = pywt.waverec(
-            forecast_coeffs, wavelet
-        )[:forecast_periods]
+        forecast_normalized = pywt.waverec(forecast_coeffs, wavelet)[
+            :forecast_periods
+        ]
 
         # Обратное преобразование нормализации
         forecast = forecast_normalized * std_val + mean_val
@@ -656,7 +652,7 @@ def wavelet_hw(
         forecast_dates = pd.date_range(
             start=ts.index[-1] + pd.DateOffset(months=1),
             periods=forecast_periods,
-            freq='MS'
+            freq="MS",
         )
 
         return pd.Series(forecast, index=forecast_dates)
@@ -664,16 +660,17 @@ def wavelet_hw(
     except Exception as e:
         warn(f"Ошибка в wavelet_hw: {str(e)}. Возвращаем наивный прогноз.")
         # Fallback - наивный прогноз
-        return pd.Series([ts.iloc[-1]] * forecast_periods, index=pd.date_range(
-            start=ts.index[-1] + pd.DateOffset(months=1),
-            periods=forecast_periods,
-            freq='MS'
-        ))
+        return pd.Series(
+            [ts.iloc[-1]] * forecast_periods,
+            index=pd.date_range(
+                start=ts.index[-1] + pd.DateOffset(months=1),
+                periods=forecast_periods,
+                freq="MS",
+            ),
+        )
 
 
-def naive_forecast(
-        ts: pd.Series,
-        periods: int = 12) -> pd.Series:
+def naive_forecast(ts: pd.Series, periods: int = 12) -> pd.Series:
     """
     Наивный прогноз (последнее известное значение)
 
@@ -689,17 +686,16 @@ def naive_forecast(
         index=pd.date_range(
             start=ts.index[-1] + pd.DateOffset(months=1),
             periods=periods,
-            freq='MS'
-        )
+            freq="MS",
+        ),
     )
 
 
 def hw_garch(ts: pd.Series, hw_model: ExponentialSmoothing):
     residuals = ts - hw_model.fittedvalues
-    garch = (arch_model(
-        residuals.dropna(),
-        vol='Garch', p=1, q=1)
-             .fit(disp='off'))
+    garch = arch_model(residuals.dropna(), vol="Garch", p=1, q=1).fit(
+        disp="off"
+    )
 
     garch_forecast = garch.forecast(horizon=12).mean.iloc[-1].values
     return hw_model.forecast(12) + garch_forecast
@@ -720,15 +716,17 @@ def hw_sarima_ks(ts: pd.Series, hw_model: ExponentialSmoothing):
 
     try:
         # SARIMA компонента
-        sarima = SARIMAX(residuals.dropna(),
-                         order=(1, 0, 1),
-                         seasonal_order=(1, 0, 1, 12)).fit(disp=False)
+        sarima = SARIMAX(
+            residuals.dropna(), order=(1, 0, 1), seasonal_order=(1, 0, 1, 12)
+        ).fit(disp=False)
         sarima_fc = sarima.forecast(12)
 
         # Kernel Smoothing
-        kr = KernelReg(residuals.dropna().values,
-                       np.arange(len(residuals.dropna())),
-                       var_type='c')
+        kr = KernelReg(
+            residuals.dropna().values,
+            np.arange(len(residuals.dropna())),
+            var_type="c",
+        )
         kr_fc = kr.fit(np.arange(len(ts), len(ts) + 12))[0]
 
         # Комбинированный прогноз (взвешенное среднее)

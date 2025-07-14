@@ -1,11 +1,23 @@
 # Журнал изменений
 ## [0.12.1] - 2025-07-14
-### Изменено
-- Опмтимизация `action` в `GitHub`
-- Чиста кода с использованием `flask8`
-  - `models.py`, `calculation.py`, `preprocessing.py`,
-  `main.py`, `__version__.py`, `config_loader.py`,
-  `visualization.py`
+
+### Оптимизации
+- Улучшена работа GitHub Actions для ускорения CI/CD
+
+### Рефакторинг
+Проведена нормализация кода с помощью:
+- **Black** (автоформатирование)
+- **Flake8** (проверка стиля)
+
+Затронутые модули:
+- `models.py`
+- `calculation.py`
+- `preprocessing.py`
+- `main.py` 
+- `__version__.py`
+- `config_loader.py`
+- `visualization.py`
+
 
 ### Удалено:
 - Закоментирована "неиспользуемая"
