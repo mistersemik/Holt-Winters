@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
+
 def calculate_metrics(forecast, actual):
     """
         Вычисляет основные метрики качества прогноза временного ряда.
@@ -19,7 +20,8 @@ def calculate_metrics(forecast, actual):
     tuple (mae, rmse, mape)
         - mae (float): Средняя абсолютная ошибка (Mean Absolute Error)
         - rmse (float): Среднеквадратичная ошибка (Root Mean Square Error)
-        - mape (float): Средняя абсолютная процентная ошибка (Mean Absolute Percentage Error), %
+        - mape (float): Средняя абсолютная
+        процентная ошибка (Mean Absolute Percentage Error), %
 
     Формулы:
     -------
@@ -31,7 +33,8 @@ def calculate_metrics(forecast, actual):
     -----------
     - Автоматически обрезает прогноз до длины фактических данных
     - Устойчив к разным типам входных данных (numpy.array, pandas.Series, list)
-    - Для MAPE рекомендуется использовать только с положительными значениями actual
+    - Для MAPE рекомендуется использовать только
+    с положительными значениями actual
     - Все метрики возвращаются в исходных единицах измерения (кроме MAPE - %)
 
     Пример использования:
@@ -43,7 +46,12 @@ def calculate_metrics(forecast, actual):
     MAE: 2.00, RMSE: 2.16, MAPE: 10.2%
     """
     forecast = forecast[:len(actual)]
-    mae = mean_absolute_error(actual, forecast) # Средняя абсолютная ошибка
-    rmse = np.sqrt(mean_squared_error(actual, forecast)) # Среднеквадратичная ошибка
-    mape = np.mean(np.abs((actual - forecast) / actual)) * 100 # Средняя абсолютная процентная ошибка
+    # Средняя абсолютная ошибка
+    mae = mean_absolute_error(actual, forecast)
+
+    # Среднеквадратичная ошибка
+    rmse = np.sqrt(mean_squared_error(actual, forecast))
+
+    # Средняя абсолютная процентная ошибка
+    mape = np.mean(np.abs((actual - forecast) / actual)) * 100
     return mae, rmse, mape
