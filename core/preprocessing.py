@@ -1,6 +1,10 @@
 import pandas as pd
 
-def prepare_data(historical_data: str, actual_data: str, year: str):
+
+def prepare_data(
+        historical_data: str,
+        actual_data: str,
+        year: str):
     """
     Подготавливает данные для моделирования из CSV-файлов
 
