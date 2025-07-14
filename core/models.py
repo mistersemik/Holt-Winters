@@ -110,7 +110,7 @@ def HW_LSTM(
     def create_dataset(data, n_steps):
         X, y = [], []
         for i in range(len(data) - n_steps):
-            X.append(data[i : i + n_steps, 0])
+            X.append(data[i: i + n_steps, 0])
             y.append(data[i + n_steps, 0])
         return np.array(X), np.array(y)
 
@@ -368,7 +368,7 @@ def build_hw_tcn_model(
     def create_sequences(data, n_steps):
         X, y = [], []
         for i in range(len(data) - n_steps):
-            X.append(data[i : i + n_steps])
+            X.append(data[i: i + n_steps])
             y.append(data[i + n_steps])
         return np.array(X), np.array(y)
 
