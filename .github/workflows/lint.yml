@@ -11,14 +11,17 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, 3.10]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Install Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: "3.9"
+          python-version: ${{ matrix.python-version }}
 
       - name: Install linters
         run: pip install black flake8 mypy
@@ -27,7 +30,8 @@ jobs:
         run: black --check . || echo "⚠️ Run 'black .' locally to fix formatting"
 
       - name: Run Flake8
-        run: flake8 . || echo "⚠️ Flake8 found issues, but continuing..."
+        run: flake8 . || echo "⚠️ Flake8 обнаружил проблему, но продолжил работу..."
 
       - name: Run Mypy
-        run: mypy . || echo "Mypy fonud issues, but arbeit loss schnel!"
+        run: mypy . || echo "⚠️ Mypy fonud обнаружил проблемы, но продолжил работу"
+        
