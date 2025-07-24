@@ -69,7 +69,9 @@ def HW_ARMIMA(ts: pd.Series, hw_model: ExponentialSmoothing):
     )
 
     # Комбинируем прогнозы
-    return pd.Series(hw_forecast.values + arima_forecast, index=forecast_dates)
+    return pd.Series(
+        hw_forecast.values + arima_forecast, index=forecast_dates
+    )
 
 
 def HW_LSTM(
@@ -110,7 +112,7 @@ def HW_LSTM(
     def create_dataset(data, n_steps):
         X, y = [], []
         for i in range(len(data) - n_steps):
-            X.append(data[i: i + n_steps, 0])
+            X.append(data[i : i + n_steps, 0])
             y.append(data[i + n_steps, 0])
         return np.array(X), np.array(y)
 
@@ -368,7 +370,7 @@ def build_hw_tcn_model(
     def create_sequences(data, n_steps):
         X, y = [], []
         for i in range(len(data) - n_steps):
-            X.append(data[i: i + n_steps])
+            X.append(data[i : i + n_steps])
             y.append(data[i + n_steps])
         return np.array(X), np.array(y)
 
@@ -422,66 +424,92 @@ def hw_bayesian_ensemble(
     """
     Байесовский ансамбль с моделью Хольта-Винтерса
 
+    Комбинирует прогноз модели Хольта-Винтерса с байесовской моделью для остатков,
+    что позволяет учитывать неопределенность и улучшить точность прогнозирования.
+
     Параметры:
-        ts: pandas.Series - исходный временной ряд
-        hw_model: обученная модель Хольта-Винтерса
-        forecast_steps: int - количество прогнозируемых периодов
+        ts: pandas.Series
+            Исходный временной ряд с DatetimeIndex
+        hw_model: ExponentialSmoothing
+            Обученная модель Хольта-Винтерса (обязательный параметр)
+        forecast_steps: int, optional
+            Количество прогнозируемых периодов (по умолчанию 12)
 
     Возвращает:
-        tuple: (forecast_series, trace) - прогноз и trace модели
+        tuple: (forecast_series, trace)
+            - forecast_series: pd.Series - комбинированный прогноз на заданное число периодов
+            - trace: pymc.MultiTrace - результаты байесовского моделирования (None в случае ошибки)
+
+    Алгоритм работы:
+        1. Вычисляет остатки (разница между фактическими значениями и прогнозом HW)
+        2. Строит байесовскую модель (AR(1) процесс) для остатков
+        3. Прогнозирует остатки на заданное число периодов
+        4. Комбинирует прогнозы основной модели и остатков
+        5. Возвращает итоговый прогноз и результаты моделирования
+
+    Пример использования:
+        >>> hw_model = ExponentialSmoothing(ts, trend='add', seasonal='add').fit()
+        >>> forecast, trace = hw_bayesian_ensemble(ts, hw_model)
     """
-    # 1. Получаем fitted values и остатки
-    fitted = hw_model.fittedvalues
-    residuals = ts - fitted
+    try:
+        # Получаем fitted values и остатки
+        fitted = hw_model.fittedvalues
+        residuals = ts - fitted
 
-    # 2. Создаем байесовскую модель для остатков
-    with pm.Model() as model:
-        # Моделируем остатки как случайное блуждание
-        sigma = pm.HalfNormal("sigma", 1)
-        resid_process = pm.GaussianRandomWalk(
-            "resid_process", sigma=sigma, shape=len(residuals)
-        )
-
-        # Модель наблюдений
-        pm.Normal(
-            "obs", mu=resid_process, sigma=0.1, observed=residuals.values
-        )
-
-        # Сэмплирование
-        trace = pm.sample(
-            1000, tune=1000, chains=2, target_accept=0.9, progressbar=False
-        )
-
-        # Прогнозирование остатков
-        with model:
-            # Создаем новые узлы для прогноза
-            # resid_forecast = pm.GaussianRandomWalk(
-            #     'resid_forecast',
-            #     sigma=sigma,
-            #     shape=forecast_steps
-            # )
-
-            # Генерируем прогноз
-            forecast = pm.sample_posterior_predictive(
-                trace, var_names=["resid_forecast"]
+        with pm.Model() as model:
+            # Моделируем остатки как случайное блуждание
+            sigma = pm.HalfNormal("sigma", 1)
+            resid_process = pm.GaussianRandomWalk(
+                "resid_process", sigma=sigma, shape=len(residuals)
             )
 
-    # 3. Комбинируем с прогнозом HW
-    hw_forecast = hw_model.forecast(forecast_steps)
-    bayesian_resid_forecast = forecast.posterior_predictive[
-        "resid_forecast"
-    ].mean(axis=(0, 1))
+            # Модель наблюдений
+            pm.Normal(
+                "obs", mu=resid_process, sigma=0.1, observed=residuals.values
+            )
 
-    combined_forecast = hw_forecast + bayesian_resid_forecast
+            # Сэмплирование
+            trace = pm.sample(
+                1000,
+                tune=1000,
+                chains=2,
+                target_accept=0.9,
+                progressbar=False,
+            )
 
-    # 4. Формируем результат
-    forecast_dates = pd.date_range(
-        start=ts.index[-1] + pd.DateOffset(months=1),
-        periods=forecast_steps,
-        freq="MS",
-    )
+            # Прогнозирование остатков
+            with model:
+                resid_forecast = pm.GaussianRandomWalk(
+                    "resid_forecast", sigma=sigma, shape=forecast_steps
+                )
 
-    return pd.Series(combined_forecast, index=forecast_dates), trace
+                # Генерируем прогноз
+                forecast = pm.sample_posterior_predictive(
+                    trace, var_names=["resid_forecast"]
+                )
+
+        # 3. Комбинируем с прогнозом HW
+        hw_forecast = hw_model.forecast(forecast_steps)
+        bayesian_resid_forecast = forecast.posterior_predictive[
+            "resid_forecast"
+        ].mean(axis=(0, 1))
+
+        combined_forecast = hw_forecast + bayesian_resid_forecast
+
+        # 4. Формируем результат
+        forecast_dates = pd.date_range(
+            start=ts.index[-1] + pd.DateOffset(months=1),
+            periods=forecast_steps,
+            freq="MS",
+        )
+
+        return pd.Series(combined_forecast, index=forecast_dates), trace
+
+    except Exception as e:
+        print(f"Ошибка в hw_bayesian_ensemble: {str(e)}")
+        # Возвращаем наивный прогноз в случае ошибки
+        naive_fc = naive_forecast(ts, forecast_steps)
+        return naive_fc, None
 
 
 def clustered_hw(ts: pd.Series, hw_model: ExponentialSmoothing, n_clusters=3):
